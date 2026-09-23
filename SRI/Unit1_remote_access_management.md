@@ -7,4 +7,7 @@ Configurar en el servidor (en este caso Ubuntu en máquina vritual)
 * sudo apt install openssh-client openssh-server  
 (el cliente no suele ser necesario instalarlo)  
 
+## Configurar conexión máquina virtual  
+Utilizando el adaptador puente del Host, configurar la ip manualmente en la MV. En modo gráfico se accede mediante el icono de red o la configuración, en la parte superior derecha de la pantalla.  
+
 ### Generar un par de claves
