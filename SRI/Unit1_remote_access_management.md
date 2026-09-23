@@ -14,4 +14,7 @@ Utilizando el adaptador puente del Host, configurar la ip manualmente en la MV. 
 Localizar el archivo de configuración, en /etc/netplan  
 usualmente 00-installer-config  
 
+network:
+&nbsp;&nbsp;&nbsp;ethernets:
+&nbsp;&nbsp;&nbsp;&nbsp;enps3: (o la tarjeta de red correspondiente)
 ### Generar un par de claves
