@@ -10,4 +10,8 @@ Configurar en el servidor (en este caso Ubuntu en máquina vritual)
 ## Configurar conexión máquina virtual  
 Utilizando el adaptador puente del Host, configurar la ip manualmente en la MV. En modo gráfico se accede mediante el icono de red o la configuración, en la parte superior derecha de la pantalla.  
 
+## Desde terminal
+Localizar el archivo de configuración, en /etc/netplan  
+usualmente 00-installer-config  
+
 ### Generar un par de claves
