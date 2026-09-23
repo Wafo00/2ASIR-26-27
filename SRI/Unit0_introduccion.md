@@ -49,8 +49,11 @@ Gentoo -> Independiente
 
 
 # Modos de conexión de la Máquina virtual  
-* Por defecto: NAT  (Usa el adaptador de red de la máquina física)  
-* Adaptador puente (Bridged): La máquina virtual se conecta a la tarjeta física de la máquina física, <ins>obteniendo su propia dirección IP</ins>  
-* Solo anfitrión (hostonly): Crea una red privada  
-* Red interna: Crea un entorno aislado  
-* Controlador genérico: Permite usar un controlador especializado  
+* Por defecto: NAT  (Usa el adaptador de red de la máquina física).  
+* Adaptador puente (Bridged): La máquina virtual se conecta a la tarjeta física de la máquina física, <ins>obteniendo su propia dirección IP</ins>.  
+* Solo anfitrión (hostonly): Crea una red privada entre máquina física y la virtual.  
+* Red interna: Crea un entorno aislado.  
+* Controlador genérico: Permite usar un controlador especializado que comparte interfaz con otros modos de virtualización.  
+* Red NAT: Similar al NAT, pero varias máquinas pueden estar conectadas en la misma red y pueden comunicarse. Sin acceso a internet. Aislada.  
+* No conectado: Simula un cable de red desconectado.  
+* Modo experimental (Cloud network): permite a la máquina virtual, entre otras cosas, escuchar y capturar todo el tráfico.    
