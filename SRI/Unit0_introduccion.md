@@ -47,6 +47,10 @@ EndeavourOS -> Arch
 Slackware -> Independiente  
 Gentoo -> Independiente  
 
-Comunidad Linux  
-Distros de servidores Linux más usadas  
 
+# Modos de conexión de la Máquina virtual  
+* Por defecto: NAT  (Usa el adaptador de red de la máquina física)  
+* Adaptador puente (Bridged): La máquina virtual se conecta a la tarjeta física de la máquina física, <ins>obteniendo su propia dirección IP</ins>  
+* Solo anfitrión (hostonly): Crea una red privada  
+* Red interna: Crea un entorno aislado  
+* Controlador genérico: Permite usar un controlador especializado  
