@@ -15,9 +15,20 @@ Localizar el archivo de configuración, en /etc/netplan
 usualmente 00-installer-config  
 
 network:
-&nbsp;&nbsp;&nbsp; ethernets:
-&nbsp;&nbsp;&nbsp;&nbsp; enps3: (o la tarjeta de red correspondiente)
-
+```yaml
+network:
+  version: 2
+  ethernets:
+    enp0s3:
+      dhcp4: false
+      addresses:
+        - 172.16.5.20/24
+      routes:
+        - to: default
+          via: 172.16.0.1
+      nameservers:
+        address: [8.8.8.8, 8.8.4.4]
+```
 ## Excepción en el firewall de windows para poder hacer pings mutuos  
 Enable-NetFirewallRule -Name "FPS-ICMP4-ERQ-In"  
 
