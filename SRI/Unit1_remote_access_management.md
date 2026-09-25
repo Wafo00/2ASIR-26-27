@@ -7,14 +7,14 @@ Configurar en el servidor (en este caso Ubuntu en máquina vritual)
 sudo apt update  
 sudo apt install openssh-client openssh-server  
 ```
-(No suele ser necesario instalar el cliente)  
+No suele ser necesario instalar el cliente  
 
-## Configurar conexión máquina virtual  
-Utilizando el adaptador puente del Host, configurar la ip manualmente en la MV. En modo gráfico se accede mediante el icono de red o la configuración, en la parte superior derecha de la pantalla.  
+### Configurar conexión máquina virtual  
+Utilizando el **adaptador puente** del Host, configurar la IP manualmente en la MV. En modo gráfico se accede mediante el icono de red o la configuración, en la parte superior derecha de la pantalla.  
 
-## Desde terminal
-Localizar el archivo de configuración, en /etc/netplan  
-usualmente "00-installer-config"  
+### Desde terminal
+Localizar el archivo de configuración en /etc/netplan  
+usualmente llamado "00-installer-config"  
 
 ```yaml
 network:
@@ -30,7 +30,7 @@ network:
       nameservers:
         address: [8.8.8.8, 8.8.4.4]
 ```
-## Excepción en el firewall de windows para poder hacer pings mutuos  
+### Excepción en el firewall de windows para poder hacer pings mutuos  
 ```yaml
 Enable-NetFirewallRule -Name "FPS-ICMP4-ERQ-In"  
 ```
