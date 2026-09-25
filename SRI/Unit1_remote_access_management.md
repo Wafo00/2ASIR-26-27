@@ -14,7 +14,7 @@ Utilizando el adaptador puente del Host, configurar la ip manualmente en la MV. 
 
 ## Desde terminal
 Localizar el archivo de configuración, en /etc/netplan  
-usualmente 00-installer-config  
+usualmente "00-installer-config"  
 
 ```yaml
 network:
