@@ -44,3 +44,18 @@ Se crea unarchivo enla carpeta de usuario si no se cambia
 type id_ed25519.pub
 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGHyZg35Ipsc6kF6MFRdfYAAvnsFmstZlRpH1ALVN7wE jordi@172.16.5.20
 ```
+
+Copiar la clave pública al servidor
+```yaml
+ssh-copy-id -i ~/.ssh/id_ed25519.pub jordi@IP_DE_LA_VM
+```
+
+Probar 
+```yaml
+ssh jordi@IP_DE_LA_VM
+```
+
+Endurecer
+```yaml
+(Opcional) Endurecer: en /etc/ssh/sshd_config → PasswordAuthentication no, PermitRootLogin no → sudo systemctl restart ssh
+```
