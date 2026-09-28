@@ -68,6 +68,49 @@ Comprobar
 ```yaml
 sudo sshd -T | grep -i passwordauthentication
 ```
+## Argumentos habituales de `ssh`
+
+### Conexión e identidad
+
+| Argumento | Comando de ejemplo | Explicación |
+|---|---|---|
+| `-i` | `ssh -i ~/.ssh/id_ed25519 usuario@IP` | Indica qué clave privada usar |
+| `-p` | `ssh -p 2222 usuario@IP` | Puerto distinto al 22 (típico con NAT y reenvío de puertos) |
+| `-l` | `ssh -l usuario IP` | Especifica el usuario; equivale a `usuario@IP` |
+| `-F` | `ssh -F otro_config usuario@IP` | Usa un fichero de configuración distinto a `~/.ssh/config` |
+| `-J` | `ssh -J usuario@bastion usuario@IP_INTERNA` | Salto a través de una máquina intermedia |
+| `-4` / `-6` | `ssh -4 usuario@IP` | Fuerza IPv4 o IPv6 |
+
+### Terminal y ejecución
+
+| Argumento | Comando de ejemplo | Explicación |
+|---|---|---|
+| `-t` | `ssh -t usuario@IP "sudo -i"` | Fuerza una terminal interactiva (necesaria para `sudo`, `nano`, `top`...) |
+| `-tt` | `ssh -tt usuario@IP "sudo -i"` | Igual que `-t`, pero obligatorio aunque el cliente no detecte terminal local |
+| `-T` | `ssh -T usuario@IP` | Desactiva la terminal; útil en scripts y automatizaciones |
+| `-N` | `ssh -N -L 8080:localhost:80 usuario@IP` | No ejecuta comando remoto; solo mantiene la conexión (túneles) |
+| `-f` | `ssh -f -N -L 8080:localhost:80 usuario@IP` | Pasa a segundo plano tras autenticarse |
+| `-C` | `ssh -C usuario@IP` | Comprime el tráfico; útil en conexiones lentas |
+
+### Túneles y reenvío
+
+| Argumento | Comando de ejemplo | Explicación |
+|---|---|---|
+| `-L` | `ssh -L 8080:localhost:80 usuario@IP` | Túnel local: un puerto tuyo apunta a un servicio remoto |
+| `-R` | `ssh -R 9000:localhost:3000 usuario@IP` | Túnel remoto: un puerto del servidor apunta a un servicio tuyo |
+| `-D` | `ssh -D 1080 usuario@IP` | Proxy SOCKS dinámico a través del servidor |
+| `-A` | `ssh -A usuario@IP` | Reenvía el agente SSH (usar solo con máquinas de confianza) |
+| `-X` / `-Y` | `ssh -X usuario@IP` | Reenvía aplicaciones gráficas X11 (`-Y` es la variante "de confianza") |
+
+### Depuración y opciones
+
+| Argumento | Comando de ejemplo | Explicación |
+|---|---|---|
+| `-v` / `-vv` / `-vvv` | `ssh -v usuario@IP` | Modo detallado; cada `v` añade nivel de información para depurar |
+| `-q` | `ssh -q usuario@IP` | Modo silencioso; suprime avisos y mensajes |
+| `-G` | `ssh -G vm` | Muestra la configuración efectiva sin conectar |
+| `-o` | `ssh -o StrictHostKeyChecking=no usuario@IP` | Pasa una opción de `ssh_config` por línea de comandos |
+
 ## Formas de conectarse por SSH
 
 ### Según el usuario
