@@ -118,7 +118,7 @@ sudo sshd -T | grep -i passwordauthentication
 | Método | Comando de ejemplo | Explicación |
 |---|---|---|
 | Usuario normal + sudo | `ssh usuario@IP` | Forma recomendada; se usa `sudo` solo para tareas puntuales |
-| Subir a root tras entrar | `sudo -i` | Cambia a shell de root; queda registrado en los logs quién lo hizo |
+| Subir a root tras entrar | `ssh usuario@IP sudo -i` | Cambia a shell de root; queda registrado en los logs quién lo hizo |
 | Directo a shell de root | `ssh -t usuario@IP "sudo -i"` | Conecta y aterriza ya como root, sin abrir el login de root |
 | Login directo como root | `ssh root@IP` | Requiere `PermitRootLogin prohibit-password` o `yes`; no recomendado |
 
