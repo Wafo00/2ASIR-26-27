@@ -37,6 +37,10 @@ Enable-NetFirewallRule -Name "FPS-ICMP4-ERQ-In"
 
 ## Configurar SSH
 
+Probar la instalación de SSH
+```yaml
+ssh jordi@IP_DE_LA_VM
+```
 ### Generar un par de claves
 En la máquina CLIENTE, se escribe en la terminal:
 ```yaml
@@ -52,11 +56,6 @@ type id_ed25519.pub
 Copiar la clave pública al servidor
 ```yaml
 type $env:USERPROFILE\.ssh\id_ed25519.pub | ssh jordi@IP_DE_LA_VM "mkdir -p ~/.ssh && chmod 700 ~/.ssh && tr -d '\r' >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys"
-```
-
-Probar 
-```yaml
-ssh jordi@IP_DE_LA_VM
 ```
 
 Endurecer (Opcional)  
