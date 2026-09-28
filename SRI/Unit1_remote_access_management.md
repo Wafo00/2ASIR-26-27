@@ -34,6 +34,9 @@ network:
 ```yaml
 Enable-NetFirewallRule -Name "FPS-ICMP4-ERQ-In"  
 ```
+
+## Configurar SSH
+
 ### Generar un par de claves
 En la máquina CLIENTE, se escribe en la terminal:
 ```yaml
