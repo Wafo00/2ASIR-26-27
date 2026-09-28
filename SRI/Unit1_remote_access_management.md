@@ -51,7 +51,7 @@ type id_ed25519.pub
 
 Copiar la clave pública al servidor
 ```yaml
-ssh-copy-id -i ~/.ssh/id_ed25519.pub jordi@IP_DE_LA_VM
+type $env:USERPROFILE\.ssh\id_ed25519.pub | ssh jordi@IP_DE_LA_VM "mkdir -p ~/.ssh && chmod 700 ~/.ssh && tr -d '\r' >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys"
 ```
 
 Probar 
