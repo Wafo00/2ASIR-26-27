@@ -62,4 +62,10 @@ Endurecer (Opcional)
 /etc/ssh/sshd_config → PasswordAuthentication no, PermitRootLogin no
 ```yaml
 sudo systemctl restart ssh
+```  
+
+Comprobar
+```yaml
+sudo sshd -T | grep -i passwordauthentication
 ```
+
