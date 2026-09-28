@@ -41,7 +41,7 @@ Probar la instalación de SSH
 ```yaml
 ssh jordi@IP_DE_LA_VM
 ```
-### Generar un par de claves
+Generar un par de claves
 En la máquina CLIENTE, se escribe en la terminal:
 ```yaml
 ssh-keygen -t ed25519 -C "jordi@172.16.5.20"
@@ -68,4 +68,46 @@ Comprobar
 ```yaml
 sudo sshd -T | grep -i passwordauthentication
 ```
+## Formas de conectarse por SSH
 
+### Según el usuario
+
+| Método | Comando de ejemplo | Explicación |
+|---|---|---|
+| Usuario normal + sudo | `ssh usuario@IP` | Forma recomendada; se usa `sudo` solo para tareas puntuales |
+| Subir a root tras entrar | `sudo -i` | Cambia a shell de root; queda registrado en los logs quién lo hizo |
+| Directo a shell de root | `ssh -t usuario@IP "sudo -i"` | Conecta y aterriza ya como root, sin abrir el login de root |
+| Login directo como root | `ssh root@IP` | Requiere `PermitRootLogin prohibit-password` o `yes`; no recomendado |
+
+### Según la autenticación
+
+| Método | Comando de ejemplo | Explicación |
+|---|---|---|
+| Contraseña | `ssh usuario@IP` | Requiere `PasswordAuthentication yes`; vulnerable a fuerza bruta |
+| Clave pública | `ssh -i ~/.ssh/id_ed25519 usuario@IP` | La clave privada nunca sale del cliente; es el método estándar |
+| Clave + ssh-agent | `ssh-add` | Se introduce la passphrase una sola vez por sesión |
+| FIDO2 | `ssh-keygen -t ed25519-sk` | Clave respaldada por una llave física (tipo YubiKey) |
+| 2FA (PAM) | `sudo apt install libpam-google-authenticator` | Añade un segundo factor con códigos temporales |
+
+### Según cómo se lanza
+
+| Método | Comando de ejemplo | Explicación |
+|---|---|---|
+| Comando suelto | `ssh usuario@IP "df -h"` | Ejecuta un comando en remoto y cierra la conexión |
+| Alias en `config` | `ssh vm` | Define `Host`, `HostName`, `User` e `IdentityFile` en `~/.ssh/config` |
+| Alias directo a root | `ssh vm` | Añadiendo `RequestTTY yes` y `RemoteCommand sudo -i` al alias |
+| Puerto distinto (NAT) | `ssh -p 2222 usuario@127.0.0.1` | Necesario si la VM usa reenvío de puertos |
+| Salto por otra máquina | `ssh -J usuario@bastion usuario@IP_INTERNA` | Llega a una máquina interna pasando por un intermediario |
+| Túnel local | `ssh -L 8080:localhost:80 usuario@IP` | Accede a un servicio de la VM sin exponerlo a la red |
+| Túnel remoto | `ssh -R 9000:localhost:3000 usuario@IP` | Expone un servicio local en el servidor remoto |
+| Proxy SOCKS | `ssh -D 1080 usuario@IP` | Usa la VM como proxy para el tráfico del cliente |
+
+### Otros clientes
+
+| Cliente | Comando de ejemplo | Explicación |
+|---|---|---|
+| PuTTY / KiTTY | `putty -ssh usuario@IP -i clave.ppk` | Cliente gráfico para Windows; usa claves en formato `.ppk` |
+| VS Code Remote-SSH | `code --remote ssh-remote+vm` | Edita ficheros de la VM como si fueran locales |
+| scp / sftp | `scp fichero usuario@IP:/ruta/` | Transferencia de ficheros sobre SSH |
+| WinSCP | (interfaz gráfica) | Cliente gráfico de transferencia de ficheros para Windows |
+| Mosh | `mosh usuario@IP` | Tolera cortes de red y cambios de IP; requiere instalarlo en ambos lados |
