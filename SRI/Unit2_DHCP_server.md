@@ -1,30 +1,48 @@
 # Instalación y configuración de DHCP con Kea
 
->  Antes de instalar: comprobar que no hay otro servicio DHCP activo en la misma red (evita conflictos de IP).
+#instalación-y-configuración-de-dhcp-con-kea
+> Antes de instalar: comprobar que no hay otro servicio DHCP activo en la misma red (evita conflictos de IP).
 
 ## 1. Instalar
 
-```bash
+#1-instalar
+
+```
 sudo apt update
 sudo apt install kea
 ```
 
 Durante la instalación aparece un prompt para configurar la contraseña de `kea-ctrl-agent` (su API REST). Elegir **"configure with a given password"** e introducir una propia.
 
-Una contraseña generada al azar queda guardada en un fichero y hay que consultarla cada vez que se necesita (`sudo cat /etc/kea/kea-api-password`). Poniéndola, se conoce desde el principio y se pueds usar directamente si en el futuro se accede a la API (`kea-shell`, recarga en caliente, herramientas de gestión), sin depender de tener acceso root para consultarla.
+Una contraseña generada al azar queda guardada en un fichero y hay que consultarla cada vez que se necesita (`sudo cat /etc/kea/kea-api-password`). Poniéndola, se conoce desde el principio y se puede usar directamente si en el futuro se accede a la API (`kea-shell`, recarga en caliente, herramientas de gestión), sin depender de tener acceso root para consultarla.
 
 ## 2. Configurar interfaz y rango
-Hacer copia de seguridad del fichero a editar:
-```yaml
-sudo cp /etc/kea/kea-dhcp4.conf /etc/kea/kea-dhcp4.conf.bak
-sudo nano /etc/kea/kea-dhcp4.conf
-```
-```bash
-sudo nano /etc/kea/kea-dhcp4.conf
-```
-Pueden rellenarse los espacios en blanco del propio archivo, o borrarlo todo e insertar el código propuesto  
 
-```json
+#2-configurar-interfaz-y-rango
+
+Hacer copia de seguridad del fichero a editar:
+
+```
+sudo cp /etc/kea/kea-dhcp4.conf /etc/kea/kea-dhcp4.conf.bak
+```
+
+> **Recomendado:** en vez de editar con `nano` (el copiar y pegar desde otro sitio puede introducir comillas tipográficas o cortar líneas, provocando errores de sintaxis difíciles de ver), sobrescribir el fichero de una vez con:
+> ```
+> sudo tee /etc/kea/kea-dhcp4.conf > /dev/null << 'EOF'
+> { ... contenido del JSON de abajo ... }
+> EOF
+> ```
+> Las comillas simples en `'EOF'` son importantes: evitan que el terminal interprete el contenido, lo escribe tal cual.
+
+Alternativamente, puede editarse a mano:
+
+```
+sudo nano /etc/kea/kea-dhcp4.conf
+```
+
+Pueden rellenarse los espacios en blanco del propio archivo, o borrarlo todo e insertar el código propuesto:
+
+```
 {
   "Dhcp4": {
     "interfaces-config": {
@@ -61,41 +79,86 @@ Sustituir interfaz (`ip a` para verla), red y rango por los propios.
 
 ## 3. Validar sintaxis
 
-```bash
+#3-validar-sintaxis
+
+```
 sudo kea-dhcp4 -t /etc/kea/kea-dhcp4.conf
 ```
 
 Detecta errores de JSON (comas de más/menos) sin arrancar el servicio.
 
+### Incidencia conocida: "Unable to open file"
+
+Si el comando anterior devuelve `Syntax check failed with: Unable to open file /etc/kea/kea-dhcp4.conf` aunque el fichero exista con permisos correctos (`root:root`, `644`), el bloqueo no es de sintaxis ni de permisos: es el perfil de **AppArmor** del paquete, que impide al proceso `kea-dhcp4` leer el fichero.
+
+Confirmarlo revisando el log del kernel:
+
+```
+sudo dmesg | grep -i apparmor | grep -i kea
+```
+
+Si aparecen líneas `DENIED` con `capname="dac_override"` o `dac_read_search`, se confirma la causa.
+
+Solución:
+
+```
+sudo apt install apparmor-utils
+sudo aa-complain /usr/sbin/kea-dhcp4
+sudo kea-dhcp4 -t /etc/kea/kea-dhcp4.conf
+```
+
+`aa-complain` pone el perfil en modo "registra pero no bloquea", en vez de desactivarlo del todo. Para producción sería preferible ajustar el perfil (`/etc/apparmor.d/usr.sbin.kea-dhcp4`) y volver a modo estricto con `sudo aa-enforce /usr/sbin/kea-dhcp4`; en un entorno de prácticas, dejarlo en `complain` es suficiente.
+
 ## 4. Arrancar y comprobar
 
-```bash
+#4-arrancar-y-comprobar
+
+```
 sudo systemctl restart kea-dhcp4-server
 sudo systemctl status kea-dhcp4-server
 ```
 
 Debe salir `active (running)`. Si falla:
 
-```bash
+```
 journalctl -u kea-dhcp4-server -e
 ```
 
 ## 5. Verificar desde un cliente
 
-```bash
+#5-verificar-desde-un-cliente
+
+```
 ip a
 ```
 
 Si no recibe IP:
 
-```bash
+```
 sudo dhclient -r && sudo dhclient
 ```
+
 ## Configurar para autoarranque
+
+#configurar-para-autoarranque
+
+```
+sudo systemctl enable kea-dhcp4-server
+sudo systemctl start kea-dhcp4-server
+```
+
+Comprobar que quedó activado:
+
+```
+systemctl is-enabled kea-dhcp4-server
+```
+
+Debe responder `enabled`. Es probable que ya lo esté por defecto tras la instalación; en ese caso no hace falta tocar nada.
+
 ---
 
-| Síntoma | Causa probable |
-|---|---|
-| El servicio no arranca | Error de sintaxis JSON — revisa con `kea-dhcp4 -t` |
-| Arranca pero no reparte IPs | Interfaz equivocada, u otro DHCP compitiendo en la red |
-| El cliente no recibe IP | VMs en redes distintas (modo de red de VirtualBox) |
+| Síntoma                     | Causa probable                                                                                     |
+| ---------------------------- | --------------------------------------------------------------------------------------------------- |
+| El servicio no arranca      | Error de sintaxis JSON (`kea-dhcp4 -t`), o AppArmor bloqueando el fichero (ver incidencia arriba) |
+| Arranca pero no reparte IPs | Interfaz equivocada, u otro DHCP compitiendo en la red                                             |
+| El cliente no recibe IP     | VMs en redes distintas (modo de red de VirtualBox)                                                 |
