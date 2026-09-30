@@ -47,7 +47,7 @@ En la máquina CLIENTE, se escribe en la terminal:
 ssh-keygen -t ed25519 -C "jordi@172.16.5.20"
 
 ```
-Se crea unarchivo en la carpeta de usuario si no se cambia
+Se crea un archivo en la carpeta de usuario si no se cambia
 Una vez creada, puede verse la clave:
 ```yaml
 type id_ed25519.pub
@@ -68,6 +68,12 @@ Comprobar
 ```yaml
 sudo sshd -T | grep -i passwordauthentication
 ```
+## Configurar servicio para autoarranque
+
+sudo systemctl enable ssh
+sudo systemctl start ssh
+sudo systemctl status ssh
+
 ## Argumentos habituales de `ssh`
 
 ### Conexión e identidad
