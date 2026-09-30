@@ -132,10 +132,21 @@ journalctl -u kea-dhcp4-server -e
 ip a
 ```
 
-Si no recibe IP:
+Para renovar la IP en un cliente Ubuntu de escritorio (con NetworkManager):
 
 ```
-sudo dhclient -r && sudo dhclient
+sudo nmcli device disconnect enp0s3
+sudo nmcli device connect enp0s3
+```
+
+(Sustituir `enp0s3` por la interfaz real del cliente.)
+
+> **Nota:** si un cliente vuelve a solicitar IP y recibe la misma que antes, es el comportamiento normal de DHCP ("sticky lease"): mientras la concesión no haya caducado (`valid-lifetime`) y la MAC coincida, el servidor intenta devolver la misma IP. No es un fallo.
+
+Para ver las IPs concedidas por Kea:
+
+```
+sudo cat /var/lib/kea/kea-leases4.csv
 ```
 
 ## Configurar para autoarranque
