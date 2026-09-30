@@ -173,3 +173,48 @@ Debe responder `enabled`. Es probable que ya lo esté por defecto tras la instal
 | El servicio no arranca      | Error de sintaxis JSON (`kea-dhcp4 -t`), o AppArmor bloqueando el fichero (ver incidencia arriba) |
 | Arranca pero no reparte IPs | Interfaz equivocada, u otro DHCP compitiendo en la red                                             |
 | El cliente no recibe IP     | VMs en redes distintas (modo de red de VirtualBox)                                                 |
+
+
+## Consultas habituales de administración
+
+#consultas-habituales-de-administración
+
+```
+sudo systemctl status kea-dhcp4-server
+```
+Estado del servicio: activo, parado, o con errores recientes.
+
+```
+sudo cat /var/lib/kea/kea-leases4.csv
+```
+Listado de todas las concesiones de IP activas, con su MAC y fecha de caducidad.
+
+```
+sudo journalctl -u kea-dhcp4-server -f
+```
+Sigue el log del servicio en tiempo real; útil para ver en directo cómo llegan las peticiones DHCP de los clientes.
+
+```
+sudo journalctl -u kea-dhcp4-server --since "10 min ago"
+```
+Log de los últimos minutos, sin tener que revisar todo el histórico.
+
+```
+sudo kea-dhcp4 -t /etc/kea/kea-dhcp4.conf
+```
+Valida la configuración actual sin reiniciar el servicio (repetir tras cualquier cambio manual del fichero).
+
+```
+sudo systemctl reload kea-dhcp4-server
+```
+Aplica cambios de configuración sin cortar las concesiones ya activas (a diferencia de `restart`, que sí interrumpe el servicio un instante).
+
+```
+ip -s -4 addr show enp0s3
+```
+Estadísticas de la interfaz por la que escucha el servidor; útil para confirmar que recibe tráfico.
+
+```
+sudo grep <MAC_del_cliente> /var/lib/kea/kea-leases4.csv
+```
+Busca la concesión de un cliente concreto por su dirección MAC (visible con `ip a` en el propio cliente).
