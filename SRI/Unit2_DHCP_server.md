@@ -177,8 +177,6 @@ Debe responder `enabled`. Es probable que ya lo esté por defecto tras la instal
 
 ## Consultas habituales de administración
 
-#consultas-habituales-de-administración
-
 ```
 sudo systemctl status kea-dhcp4-server
 ```
