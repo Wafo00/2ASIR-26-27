@@ -77,6 +77,24 @@ Pueden rellenarse los espacios en blanco del propio archivo, o borrarlo todo e i
 
 Sustituir interfaz (`ip a` para verla), red y rango por los propios.
 
+### Cambiar tiempos de concesión (lease time)
+
+[#cambiar-tiempos-de-concesión-lease-time](#cambiar-tiempos-de-concesión-lease-time)
+
+```json
+"valid-lifetime": 600,
+"max-valid-lifetime": 7200,
+```
+
+`valid-lifetime`: duración por defecto de una concesión, en segundos. `max-valid-lifetime`: el máximo permitido, aunque el cliente pida más.
+
+Editar en `/etc/kea/kea-dhcp4.conf`, validar y aplicar sin cortar el servicio:
+
+```
+sudo kea-dhcp4 -t /etc/kea/kea-dhcp4.conf
+sudo systemctl reload kea-dhcp4-server
+```
+
 ## 3. Validar sintaxis
 
 #3-validar-sintaxis
