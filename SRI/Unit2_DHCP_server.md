@@ -22,6 +22,7 @@ sudo nano /etc/kea/kea-dhcp4.conf
 ```bash
 sudo nano /etc/kea/kea-dhcp4.conf
 ```
+Pueden rellenarse los espacios en blanco del propio archivo, o borrarlo todo e insertar el código propuesto  
 
 ```json
 {
