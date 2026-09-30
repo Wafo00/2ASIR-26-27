@@ -79,8 +79,6 @@ Sustituir interfaz (`ip a` para verla), red y rango por los propios.
 
 ### Cambiar tiempos de concesión (lease time)
 
-[#cambiar-tiempos-de-concesión-lease-time](#cambiar-tiempos-de-concesión-lease-time)
-
 ```json
 "valid-lifetime": 600,
 "max-valid-lifetime": 7200,
