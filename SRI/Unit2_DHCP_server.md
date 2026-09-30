@@ -32,7 +32,7 @@ sudo cp /etc/kea/kea-dhcp4.conf /etc/kea/kea-dhcp4.conf.bak
 > { ... contenido del JSON de abajo ... }
 > EOF
 > ```
-> Las comillas simples en `'EOF'` son importantes: evitan que el terminal interprete el contenido, lo escribe tal cual.
+> Las comillas simples en `'EOF'` evitan que el terminal interprete el contenido, lo escribe tal cual (End Of File).
 
 Alternativamente, puede editarse a mano:
 
