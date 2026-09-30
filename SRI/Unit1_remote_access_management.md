@@ -69,11 +69,11 @@ Comprobar
 sudo sshd -T | grep -i passwordauthentication
 ```
 ## Configurar servicio para autoarranque
-
+```yaml
 sudo systemctl enable ssh
 sudo systemctl start ssh
 sudo systemctl status ssh
-
+```
 ## Argumentos habituales de `ssh`
 
 ### Conexión e identidad
