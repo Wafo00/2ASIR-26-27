@@ -14,7 +14,11 @@ Durante la instalación aparece un prompt para configurar la contraseña de `kea
 Una contraseña generada al azar queda guardada en un fichero y hay que consultarla cada vez que se necesita (`sudo cat /etc/kea/kea-api-password`). Poniéndola, se conoce desde el principio y se pueds usar directamente si en el futuro se accede a la API (`kea-shell`, recarga en caliente, herramientas de gestión), sin depender de tener acceso root para consultarla.
 
 ## 2. Configurar interfaz y rango
-
+Hacer copia de seguridad del fichero a editar:
+```yaml
+sudo cp /etc/kea/kea-dhcp4.conf /etc/kea/kea-dhcp4.conf.bak
+sudo nano /etc/kea/kea-dhcp4.conf
+```
 ```bash
 sudo nano /etc/kea/kea-dhcp4.conf
 ```
@@ -86,7 +90,7 @@ Si no recibe IP:
 ```bash
 sudo dhclient -r && sudo dhclient
 ```
-
+## Configurar para autoarranque
 ---
 
 | Síntoma | Causa probable |
