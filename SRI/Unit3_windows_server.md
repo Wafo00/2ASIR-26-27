@@ -8,80 +8,116 @@
 Install-WindowsFeature -Name DHCP -IncludeManagementTools
 ```
 
-Instala el servicio y la consola de gestión (`DHCP Manager`). Para configurarlo también puede usarse esa consola gráfica (`dhcpmgmt.msc`); aquí se documenta en PowerShell por ser más rápido de repetir y de pegar en pruebas.
+Instala el servicio y la consola de gestión (`DHCP Manager`). También puede configurarse desde esa consola gráfica (`dhcpmgmt.msc`); aquí se documenta en PowerShell por ser más rápido de repetir.
 
-## 2. Autorizar el servidor (si hay Active Directory)
+## 2. Autorizar el servidor (solo si hay Active Directory)
 
 ```powershell
-Add-DhcpServerInDC -DnsName "servidor.dominio.local" -IPAddress 172.16.5.20
+Add-DhcpServerInDC -DnsName "servidor.dominio.local" -IPAddress <IP_DEL_SERVIDOR>
 ```
 
-En un dominio AD, un DHCP sin autorizar es ignorado por los clientes como medida de seguridad (evita servidores DHCP "pirata" en la red). En un servidor independiente (sin AD) este paso no existe y se puede omitir.
+En un dominio AD, un DHCP sin autorizar es ignorado por los clientes como medida de seguridad. En un servidor independiente (sin AD) este paso no existe y debe omitirse; el comando fallaría al no encontrar un controlador de dominio.
 
 ## 3. Crear el ámbito (scope) y el rango
 
 ```powershell
-Add-DhcpServerv4Scope -Name "Aula" -StartRange 172.16.5.21 -EndRange 172.16.5.30 -SubnetMask 255.255.255.0
+Add-DhcpServerv4Scope -Name "Nombre_del_ambito" -StartRange <IP_INICIO> -EndRange <IP_FIN> -SubnetMask 255.255.255.0
 ```
 
-Un *scope* equivale al `subnet4` de Kea: define la red y el rango de IPs que el servidor puede repartir.
+Un *scope* define la red y el rango de IPs que el servidor puede repartir.
 
-## 4. Configurar opciones (puerta de enlace y DNS)
+## 4. Configurar puerta de enlace
 
 ```powershell
-Set-DhcpServerv4OptionValue -ScopeId 172.16.5.0 -Router 172.16.5.1 -DnsServer 8.8.8.8,8.8.4.4
+Set-DhcpServerv4OptionValue -ScopeId <RED> -Router <IP_GATEWAY>
 ```
 
-Equivalente al `option-data` de Kea: indica a los clientes su puerta de enlace y servidores DNS.
-
-## 5. Activar el ámbito
+## 5. Configurar DNS
 
 ```powershell
-Set-DhcpServerv4Scope -ScopeId 172.16.5.0 -State Active
+Set-DhcpServerv4OptionValue -ScopeId <RED> -DnsServer <IP_DNS_1>,<IP_DNS_2>
+```
+
+Este cmdlet valida que la IP indicada responda realmente como servidor DNS (puerto 53), no solo que sea alcanzable por red. Puede fallar con el error `"<IP> no es un servidor DNS válido"` en dos casos:
+
+- **La IP no tiene salida de red** (en una VM con la interfaz en modo "red interna" de VirtualBox, por ejemplo, ninguna IP externa será alcanzable nunca por diseño).
+- **La IP es alcanzable pero no tiene el rol DNS instalado** (no hay nada escuchando en el puerto 53).
+
+Para saber si el rol DNS está instalado:
+
+```powershell
+Get-WindowsFeature -Name DNS
+```
+
+Si no lo está, dos opciones:
+
+**A. Instalar el rol DNS** (recomendado; permite resolución de nombres real):
+
+```powershell
+Install-WindowsFeature -Name DNS -IncludeManagementTools
+Set-DhcpServerv4OptionValue -ScopeId <RED> -DnsServer <IP_DEL_PROPIO_SERVIDOR>
+```
+
+**B. Forzar el valor sin validar** (válido solo si el objetivo es probar el reparto de DHCP, sin resolución de nombres real):
+
+```powershell
+Set-DhcpServerv4OptionValue -ScopeId <RED> -DnsServer <IP_DNS> -Force
+```
+
+Si se instala el rol DNS, crear además una zona para poder registrar nombres de los equipos de la red:
+
+```powershell
+Add-DnsServerPrimaryZone -Name "dominio.local" -ZoneFile "dominio.local.dns"
+```
+
+## 6. Activar el ámbito
+
+```powershell
+Set-DhcpServerv4Scope -ScopeId <RED> -State Active
 ```
 
 Un scope creado pero no activado existe en la configuración, pero no reparte IPs.
 
-## 6. Reservar IPs fijas (equipos, impresoras...)
+## 7. Reservar IPs fijas (equipos, impresoras, servidores...)
 
 ```powershell
-Add-DhcpServerv4Reservation -ScopeId 172.16.5.0 -IPAddress 172.16.5.5 -ClientId "08-00-27-AA-BB-CC" -Description "Impresora aula"
+Add-DhcpServerv4Reservation -ScopeId <RED> -IPAddress <IP_FIJA> -ClientId "<MAC_DEL_EQUIPO>" -Description "Descripción del equipo"
 ```
 
-Una reserva asigna siempre la misma IP a una MAC concreta, combinando lo cómodo del DHCP (gestión centralizada) con lo predecible de una IP fija. Es el método habitual en entornos reales para impresoras, servidores internos o equipos que necesitan localizarse siempre en la misma dirección. El `ClientId` es la MAC del equipo (se obtiene con `ipconfig /all` en el cliente, o `arp -a` desde el servidor si ya ha tenido tráfico).
+Una reserva asigna siempre la misma IP a una MAC concreta: combina la gestión centralizada del DHCP con la previsibilidad de una IP fija. Es el método habitual para impresoras, servidores internos o cualquier equipo que deba localizarse siempre en la misma dirección. La MAC se obtiene con `ipconfig /all` en el equipo cliente, o con `arp -a` desde el servidor si el equipo ya ha generado tráfico.
 
-## 7. Validar y comprobar
+## 8. Validar y comprobar
 
 ```powershell
 Get-DhcpServerv4Scope
 Get-DhcpServerv4Statistics
 ```
 
-Muestra el estado del scope y cuántas IPs están libres/concedidas, sin necesidad de ir cliente por cliente.
+Muestra el estado del ámbito y cuántas IPs están libres o concedidas.
 
-## 8. Verificar desde un cliente
+## 9. Verificar desde un cliente
 
 ```cmd
 ipconfig /release
 ipconfig /renew
 ```
 
-El cliente debe recibir una IP dentro del rango `172.16.5.21-30`, salvo que tenga reserva, en cuyo caso recibirá siempre la misma.
+El cliente debe recibir una IP dentro del rango configurado, salvo que tenga reserva, en cuyo caso recibirá siempre la misma.
 
 ## Consultas habituales de administración
 
 ```powershell
-Get-DhcpServerv4Lease -ScopeId 172.16.5.0
+Get-DhcpServerv4Lease -ScopeId <RED>
 ```
-Listado de concesiones activas, equivalente al `kea-leases4.csv` de Kea.
+Listado de concesiones activas.
 
 ```powershell
-Get-DhcpServerv4Reservation -ScopeId 172.16.5.0
+Get-DhcpServerv4Reservation -ScopeId <RED>
 ```
 Listado de reservas configuradas.
 
 ```powershell
-Remove-DhcpServerv4Lease -IPAddress 172.16.5.24
+Remove-DhcpServerv4Lease -IPAddress <IP>
 ```
 Libera manualmente una concesión activa, sin esperar a que caduque.
 
@@ -94,6 +130,7 @@ Porcentaje de uso del ámbito; útil para detectar si el rango se está quedando
 
 | Síntoma | Causa probable |
 |---|---|
-| El cliente no recibe IP | Scope no activado, o servidor no autorizado en AD |
-| Siempre recibe la misma IP | Comportamiento normal si tiene reserva, o lease aún no caducado |
+| El cliente no recibe IP | Ámbito no activado, o servidor no autorizado en AD |
+| Siempre recibe la misma IP | Comportamiento normal si tiene reserva, o la concesión aún no ha caducado |
 | El servicio no reparte en la red esperada | Interfaz de red del servidor en la VLAN/red equivocada |
+| Error "`<IP>` no es un servidor DNS válido" al configurar DNS | La IP no es alcanzable (red interna de una VM) o no tiene el rol DNS instalado — ver sección "Configurar DNS" |
