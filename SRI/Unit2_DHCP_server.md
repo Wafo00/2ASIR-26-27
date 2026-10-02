@@ -127,6 +127,12 @@ sudo nmcli device disconnect enp0s3
 sudo nmcli device connect enp0s3
 ```
 
+Si el cliente es Windows:
+```powershell
+ipconfig /release
+ipconfig /renew
+```
+
 Si repite la misma IP, es comportamiento normal (*sticky lease*: mientras no caduque y la MAC coincida, el servidor intenta devolver la misma).
 
 ## Operaciones habituales
@@ -266,6 +272,18 @@ En el cliente (Ubuntu), modo DHCP y comprobar con `ip a`. La concesión se confi
 
 ```powershell
 Get-DhcpServerv4Lease -ScopeId <RED>
+```
+
+En un cliente Windows:
+```powershell
+ipconfig /release
+ipconfig /renew
+```
+
+En un cliente Ubuntu (NetworkManager):
+```bash
+sudo nmcli device disconnect enp0s3
+sudo nmcli device connect enp0s3
 ```
 
 ## Operaciones habituales
