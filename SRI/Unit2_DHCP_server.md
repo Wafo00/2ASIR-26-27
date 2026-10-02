@@ -1,4 +1,4 @@
-# Instalación y configuración de DHCP con Kea
+# Instalación y configuración de DHCP con Kea en Linux (Ubuntu/Debian)
 
 #instalación-y-configuración-de-dhcp-con-kea
 > Antes de instalar: comprobar que no hay otro servicio DHCP activo en la misma red (evita conflictos de IP).
@@ -231,4 +231,134 @@ Estadísticas de la interfaz por la que escucha el servidor; útil para confirma
 ```
 sudo grep <MAC_del_cliente> /var/lib/kea/kea-leases4.csv
 ```
-Busca la concesión de un cliente concreto por su dirección MAC (visible con `ip a` en el propio cliente).
+Busca la concesión de un cliente concreto por su dirección MAC (visible con `ip a` en el propio cliente).  
+  
+
+# Instalación y configuración de DHCP en Windows Server 2022
+
+> Antes de instalar: comprobar que no hay otro servicio DHCP activo en la misma red (evita conflictos de IP).
+
+## 1. Configurar IP estática en el servidor
+
+Comprobar primero que esa IP no está en uso por otro equipo de la red (evita conflictos como el descrito en la incidencia del paso 6):
+
+```powershell
+Test-NetConnection -ComputerName <IP_SERVIDOR> -Port 53
+Resolve-DnsName -Name localhost -Server <IP_SERVIDOR>
+ping <IP_SERVIDOR>
+```
+
+Si alguno responde, esa IP ya está en uso por otro equipo; elegir otra antes de continuar.
+
+```powershell
+New-NetIPAddress -InterfaceAlias "Ethernet" -IPAddress <IP_SERVIDOR> -PrefixLength 24 -DefaultGateway <IP_GATEWAY>
+Set-DnsClientServerAddress -InterfaceAlias "Ethernet" -ServerAddresses <IP_SERVIDOR>
+```
+
+El servidor DHCP nunca debe obtener su propia IP por DHCP, por lo que se configura de forma manual y estática. `-InterfaceAlias` es el nombre del adaptador de red (comprobar con `Get-NetAdapter` si hay dudas).
+
+> **Importante:** en una VM VirtualBox, el adaptador de red debe estar en modo **Red interna** (o Bridge, según el diseño de la red), nunca en NAT — en NAT la IP la asigna VirtualBox automáticamente (típicamente `10.0.2.x`) y no es posible fijar una IP propia de la red del aula. Revisar esto en VirtualBox → Configuración → Red antes del paso 1.
+
+## 2. Instalar el rol DHCP
+
+```powershell
+Install-WindowsFeature -Name DHCP -IncludeManagementTools
+```
+
+Instala el servicio y la consola de gestión (`DHCP Manager`). También puede configurarse desde esa consola gráfica (`dhcpmgmt.msc`); aquí se documenta en PowerShell por ser más rápido de repetir.
+
+Si la instalación tarda más de unos minutos sin terminar, puede deberse a que el sistema está intentando descargar los ficheros de origen desde Windows Update en vez de usarlos localmente — algo que falla o se alarga mucho sin salida a internet (red interna). Cancelar con `Ctrl+C` y volver a lanzar el mismo comando suele resolverlo, ya que `Install-WindowsFeature` es idempotente y seguro de repetir. Si persiste, indicar una fuente local explícita (el ISO de instalación montado):
+
+```powershell
+Install-WindowsFeature -Name DHCP -IncludeManagementTools -Source "D:\sources\sxs"
+```
+
+## 3. Autorizar el servidor (solo si hay Active Directory)
+
+```powershell
+Add-DhcpServerInDC -DnsName "servidor.dominio.local" -IPAddress <IP_SERVIDOR>
+```
+
+En un dominio AD, un DHCP sin autorizar es ignorado por los clientes como medida de seguridad. En un servidor independiente (sin AD) este paso no existe y debe omitirse; el comando fallaría al no encontrar un controlador de dominio.
+
+## 4. Crear el ámbito (scope) y el rango
+
+```powershell
+Add-DhcpServerv4Scope -Name "Nombre_del_ambito" -StartRange <IP_INICIO> -EndRange <IP_FIN> -SubnetMask 255.255.255.0
+```
+
+Un *scope* define la red y el rango de IPs que el servidor puede repartir, ya sea de forma dinámica o mediante reservas (ver paso 7). **La IP del propio servidor debe quedar fuera de este rango.**
+
+## 5. Configurar puerta de enlace
+
+```powershell
+Set-DhcpServerv4OptionValue -ScopeId <RED> -Router <IP_GATEWAY>
+```
+
+## 6. Configurar DNS
+
+```powershell
+Set-DhcpServerv4OptionValue -ScopeId <RED> -DnsServer <IP_DNS_1>,<IP_DNS_2>
+```
+
+Este cmdlet valida que la IP indicada responda realmente como servidor DNS, y en algunos entornos (especialmente redes internas sin salida y sin forwarders configurados) puede rechazar una IP que en realidad funciona correctamente. Puede dar el error `"<IP> no es un servidor DNS válido"` en varios casos:
+
+- **La IP no tiene salida de red** (VM en modo "red interna" de VirtualBox; ninguna IP externa, como `8.8.8.8`, será alcanzable nunca por diseño).
+- **La IP es alcanzable pero no tiene el rol DNS instalado** (no hay nada escuchando en el puerto 53).
+- **El rol DNS está instalado y funciona, pero el cmdlet igualmente lo rechaza** (validación interna adicional, p. ej. intenta resolución recursiva hacia internet). Confirmar que el DNS funciona de verdad antes de forzar:
+```powershell
+  Resolve-DnsName -Name localhost -Server <IP_DNS>
+```
+  Si responde correctamente, el servidor DNS es válido y el rechazo del cmdlet es un falso positivo.
+
+Para saber si el rol DNS está instalado:
+
+```powershell
+Get-WindowsFeature -Name DNS
+```
+
+Si no lo está, instalarlo (recomendado; permite resolución de nombres real):
+
+```powershell
+Install-WindowsFeature -Name DNS -IncludeManagementTools
+Set-DhcpServerv4OptionValue -ScopeId <RED> -DnsServer <IP_SERVIDOR>
+```
+
+Si el DNS ya está confirmado como funcional (con `Resolve-DnsName`) y el cmdlet lo sigue rechazando, saltar la validación:
+
+```powershell
+Set-DhcpServerv4OptionValue -ScopeId <RED> -DnsServer <IP_DNS> -Force
+```
+
+Si se instala el rol DNS, crear además una zona para poder registrar nombres de los equipos de la red:
+
+```powershell
+Add-DnsServerPrimaryZone -Name "dominio.local" -ZoneFile "dominio.local.dns"
+```
+
+## 7. Activar el ámbito
+
+```powershell
+Set-DhcpServerv4Scope -ScopeId <RED> -State Active
+```
+
+Un scope creado pero no activado existe en la configuración, pero no reparte IPs.
+
+## 8. Reservar IPs fijas (equipos, impresoras, servidores...)
+
+Una **reserva** no es lo mismo que el rango del scope: el scope es el conjunto de IPs que el servidor puede repartir dinámicamente; una reserva fija una IP concreta de ese rango a una MAC concreta, para que ese equipo reciba siempre la misma dirección. No existe un comando que reserve un rango completo de golpe sin especificar MACs — se repite una vez por equipo:
+
+```powershell
+Add-DhcpServerv4Reservation -ScopeId <RED> -IPAddress <IP_FIJA> -ClientId "<MAC_DEL_EQUIPO>" -Description "Descripción del equipo"
+```
+
+Es el método habitual para impresoras, servidores internos o cualquier equipo que deba localizarse siempre en la misma dirección. La MAC se obtiene con `ipconfig /all` en el equipo cliente, o con `arp -a` desde el servidor si el equipo ya ha generado tráfico.
+
+Si en cambio lo que se busca es simplemente limitar el rango dinámico (sin atar IPs a equipos concretos), basta con ajustar `-EndRange` al crear el scope (paso 4), sin usar reservas.
+
+## 9. Validar y comprobar
+
+```powershell
+Get-DhcpServerv4Scope
+Get-DhcpServerv4Statistics
+Get
