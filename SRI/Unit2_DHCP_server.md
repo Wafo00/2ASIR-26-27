@@ -136,7 +136,10 @@ ipconfig /renew
 Si repite la misma IP, es comportamiento normal (*sticky lease*: mientras no caduque y la MAC coincida, el servidor intenta devolver la misma).
 
 ## Operaciones habituales
-
+```
+nmcli -f ALL device show | grep -i dhcp_server_identifier
+```
+Servicor DHCP del que recibe IP el cliente
 ```
 sudo cat /var/lib/kea/kea-leases4.csv
 ```
