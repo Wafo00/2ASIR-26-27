@@ -271,6 +271,7 @@ Get-Service -Name DHCPServer
 En el cliente (Ubuntu), modo DHCP y comprobar con `ip a`. La concesión se confirma en el servidor:
 
 ```powershell
+Get-DhcpServerv4Scope (lista todos los ámbitos del servidor)
 Get-DhcpServerv4Lease -ScopeId <RED>
 ```
 
@@ -303,6 +304,11 @@ Get-DhcpServerv4Reservation -ScopeId <RED>
 Remove-DhcpServerv4Reservation -IPAddress <IP>
 ```
 Listar / eliminar reservas.
+
+```powershell
+Remove-DhcpServerv4Lease -IPAddress <IP>
+```
+Liberar una concesión sin esperar su caducidad.
 
 ```powershell
 Remove-DhcpServerv4Lease -IPAddress <IP>
