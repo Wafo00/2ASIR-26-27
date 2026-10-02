@@ -330,3 +330,6 @@ Desactivar temporalmente el reparto sin borrar la configuración.
 | No reparte en la red esperada | Adaptador en modo NAT en vez de Red interna/Bridge |
 | Error DNS "no es un servidor válido" | IP no alcanzable, rol DNS no instalado, o falso positivo del cmdlet |
 | IPs inconsistentes en el cliente | Hay más de un servidor DHCP activo en la red |
+
+¿Puede haber dos servidores DHCP en una misma red?
+Sí, y es común, pero tienen que tener los ámbitos muy bien configurados
