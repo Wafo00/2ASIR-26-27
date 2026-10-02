@@ -306,11 +306,7 @@ Remove-DhcpServerv4Reservation -IPAddress <IP>
 Listar / eliminar reservas.
 
 ```powershell
-Remove-DhcpServerv4Lease -IPAddress <IP>
-```
-Liberar una concesión sin esperar su caducidad.
-
-```powershell
+Get-DhcpServerv4Lease -ScopeId [IPRed] (Comprueba las ips concedidas)
 Remove-DhcpServerv4Lease -IPAddress <IP>
 ```
 Liberar una concesión sin esperar su caducidad.
