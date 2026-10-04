@@ -403,9 +403,23 @@ Clic derecho sobre el servidor → **Todas las tareas** → **Reiniciar** (opcio
 
 ## 10. Verificar desde un cliente
 
-En el cliente, renovar la IP (ver manual PowerShell para los comandos exactos de Windows/Ubuntu) y comprobar la concesión:
+## 10. Verificar desde un cliente
 
-Expandir el ámbito → **Concesiones de direcciones** → debe aparecer la IP y el nombre/MAC del cliente.
+En un cliente Windows, renovar la IP:
+
+```powershell
+ipconfig /release
+ipconfig /renew
+```
+
+En un cliente Ubuntu (NetworkManager):
+
+```bash
+sudo nmcli device disconnect enp0s3
+sudo nmcli device connect enp0s3
+```
+
+Comprobar la concesión en el servidor: expandir el ámbito → **Concesiones de direcciones** → debe aparecer la IP y el nombre/MAC del cliente.
 
 ## Operaciones habituales
 
