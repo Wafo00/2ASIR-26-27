@@ -274,7 +274,6 @@ Get-Service -Name DHCPServer
 En el cliente (Ubuntu), modo DHCP y comprobar con `ip a`. La concesión se confirma en el servidor:
 
 ```powershell
-Get-DhcpServerv4Scope (lista todos los ámbitos del servidor)
 Get-DhcpServerv4Lease -ScopeId <RED>
 ```
 
@@ -283,6 +282,7 @@ En un cliente Windows:
 ipconfig /release
 ipconfig /renew
 ```
+(Lista todos los ámbitos del servidor, y las concesiones del rango indicado)  
 
 En un cliente Ubuntu (NetworkManager):
 ```bash
@@ -309,7 +309,11 @@ Remove-DhcpServerv4Reservation -IPAddress <IP>
 Listar / eliminar reservas.
 
 ```powershell
-Get-DhcpServerv4Lease -ScopeId [IPRed] (Comprueba las ips concedidas)
+Get-DhcpServerv4Lease -ScopeId <IPRed>
+```
+(Comprueba las ips concedidas)
+
+```powershell
 Remove-DhcpServerv4Lease -IPAddress <IP>
 ```
 Liberar una concesión sin esperar su caducidad.
@@ -334,5 +338,100 @@ Desactivar temporalmente el reparto sin borrar la configuración.
 | Error DNS "no es un servidor válido" | IP no alcanzable, rol DNS no instalado, o falso positivo del cmdlet |
 | IPs inconsistentes en el cliente | Hay más de un servidor DHCP activo en la red |
 
-¿Puede haber dos servidores DHCP en una misma red?
-Sí, y es común, pero tienen que tener los ámbitos muy bien configurados
+# Instalación y configuración de DHCP en Windows Server 2022 (interfaz gráfica)
+
+> Antes de instalar: comprobar que no hay otro servicio DHCP activo en la misma red. El adaptador de red de la VM debe estar en modo **Red interna** o **Bridge**, nunca NAT.
+
+## 1. Configurar IP estática
+
+Panel de control → Centro de redes y recursos compartidos → Cambiar configuración del adaptador → clic derecho sobre el adaptador → Propiedades → Protocolo de Internet versión 4 (TCP/IPv4) → Propiedades.
+
+Marcar **"Usar la siguiente dirección IP"** y rellenar IP, máscara, puerta de enlace. En **"Usar las siguientes direcciones de servidor DNS"**, poner la propia IP del servidor.
+
+## 2. Instalar el rol DHCP
+
+Administrador del servidor → **Agregar roles y características** → Siguiente hasta "Roles de servidor" → marcar **Servidor DHCP** → Agregar características (si lo pide) → Siguiente → Instalar.
+
+Al terminar, clic en el aviso amarillo de la esquina superior → **Completar configuración de DHCP** → Confirmar (sin añadir credenciales de dominio si no hay AD) → Cerrar.
+
+## 3. Autorizar en AD (solo si hay dominio)
+
+Herramientas → DHCP → clic derecho sobre el nombre del servidor → **Autorizar**.
+
+Omitir si no hay Active Directory.
+
+## 4. Crear el ámbito
+
+Herramientas → DHCP → expandir el servidor → clic derecho en **IPv4** → **Ámbito nuevo** → Siguiente.
+
+- Nombre del ámbito → el que se quiera.
+- Rango de direcciones IP → IP inicial, IP final, máscara de subred.
+- Exclusiones → (opcional) dejar fuera IPs reservadas para equipos fijos.
+- Duración de la concesión → por defecto 8 días.
+
+## 5. Configurar gateway
+
+Dentro del mismo asistente (paso "Puerta de enlace predeterminada"): añadir la IP del router/gateway → Agregar → Siguiente.
+
+## 6. Configurar DNS
+
+Dentro del mismo asistente (paso "Dominio y servidor DNS"): el nombre de dominio puede dejarse en blanco si no hay AD. En "Servidor IP", escribir la IP del propio servidor → **Agregar** (si no se resuelve el nombre automáticamente, escribir la IP directamente y pulsar Agregar sin esperar la resolución).
+
+Si el rol DNS no está instalado: Administrador del servidor → Agregar roles y características → marcar **Servidor DNS** → Instalar (mismo proceso que el paso 2, pero con DNS).
+
+## 7. Activar el ámbito
+
+Dentro del asistente, paso "Activar el ámbito ahora" → marcar **Sí** → Finalizar.
+
+Si ya se creó sin activar: clic derecho sobre el ámbito → **Activar**.
+
+## 8. Reservar IPs fijas (equipos, impresoras...)
+
+Expandir el ámbito → clic derecho en **Reservas** → **Reserva nueva**.
+
+Rellenar: nombre de la reserva, dirección IP deseada, dirección MAC del equipo (sin guiones ni dos puntos, formato `0800279ABC8E`), descripción → Agregar.
+
+MAC del cliente: `ipconfig /all` en el propio equipo.
+
+## 9. Validar y comprobar
+
+Clic en el nombre del ámbito → panel derecho debe mostrar el rango y el estado **Activo**.
+
+Clic derecho sobre el servidor → **Todas las tareas** → **Reiniciar** (opcional, para confirmar que arranca bien tras cualquier cambio).
+
+> Si aparece el aviso *"Requiere configuración para Servidor DHCP en \<equipo\>"* al abrir la consola, y no hay AD en el entorno, es un falso positivo — no afecta al servicio si el ámbito está activo y reparte IPs.
+
+## 10. Verificar desde un cliente
+
+En el cliente, renovar la IP (ver manual PowerShell para los comandos exactos de Windows/Ubuntu) y comprobar la concesión:
+
+Expandir el ámbito → **Concesiones de direcciones** → debe aparecer la IP y el nombre/MAC del cliente.
+
+## Operaciones habituales
+
+**Cambiar tiempo de concesión:** clic derecho en el ámbito → Propiedades → pestaña General → ajustar duración.
+
+**Cambiar el rango del pool:** clic derecho en el ámbito → Propiedades → pestaña General → editar rango de direcciones (puede requerir eliminar y recrear el ámbito si se reduce por debajo de concesiones activas).
+
+**Añadir/eliminar reserva:** Reservas → clic derecho → Nueva reserva / Eliminar.
+
+**Ver concesiones activas:** Concesiones de direcciones (dentro del ámbito).
+
+**Liberar una concesión:** Concesiones de direcciones → clic derecho sobre la IP → **Eliminar**.
+
+**Ver estadísticas de uso:** clic derecho sobre el servidor → **Mostrar estadísticas**.
+
+**Desactivar el ámbito temporalmente:** clic derecho sobre el ámbito → **Desactivar**.
+
+---
+
+| Síntoma | Causa probable |
+|---|---|
+| El cliente no recibe IP | Ámbito inactivo, servidor no autorizado en AD, o servicio parado |
+| Siempre recibe la misma IP | Tiene reserva, o la concesión aún no ha caducado |
+| No reparte en la red esperada | Adaptador en modo NAT en vez de Red interna/Bridge |
+| Falta la opción "Agregar roles y características" | No se está ejecutando como Administrador |
+
+## Preguntas y respuestas
+### ¿Puede haber dos servidores DHCP en una misma red?
+Sí, siempre que estén coordinados en modo failover (reparto o respaldo del mismo ámbito entre ambos). Sin esa coordinación, dos servidores DHCP independientes en la misma red compiten y dan asignaciones inconsistentes.
