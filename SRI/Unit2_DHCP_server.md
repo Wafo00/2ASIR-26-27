@@ -500,35 +500,80 @@ A diferencia de lo que ocurre con los archivos de configuración de `netplan`, e
 ## interfaces-config
 - `"interfaces": [ ]`: lista de interfaces de red por las que escucha el servidor. Vacía por defecto — sin nada aquí, el servicio no responde a nadie.
 - `"dhcp-socket-type": "udp"` (comentado): por defecto usa *raw sockets* (recibe hasta paquetes de clientes sin IP todavía). Cambiar a `udp` solo si todo el tráfico llega ya reenviado (*relayed*).
+**interfaces-config**
+```json
+"interfaces": ["enp0s3"]
+```
+Escucha solo en esta interfaz
 
 ## control-sockets
 - Socket Unix para gestión en caliente: permite mandarle comandos al servidor en ejecución (recargar configuración, consultar estadísticas) sin reiniciarlo. Es lo que usamos para el `reload`.
+**control-sockets**
+```json
+"control-sockets": [{ "socket-type": "unix", "socket-name": "/run/kea/kea4-ctrl-socket" }]
+```
+Permite `reload` sin reiniciar el servicio.
 
 ## lease-database
 - `"type": "memfile"`: guarda las concesiones en un fichero CSV en memoria/disco (lo que habéis estado consultando en `kea-leases4.csv`). Alternativa: bases de datos MySQL/PostgreSQL para redes grandes.
 - `"lfc-interval": 3600`: cada cuánto (segundos) se compacta ese fichero, eliminando entradas obsoletas.
+**lease-database**
+```json
+"lease-database": { "type": "memfile", "lfc-interval": 3600 }
+```
+Guarda concesiones en CSV, compactado cada hora.
 
 ## hosts-databases (comentado)
 - Permite guardar las reservas de IP (por MAC) en una base de datos externa en vez de en el propio fichero de configuración. Útil solo con muchas reservas; en redes pequeñas se dejan en el `.conf` directamente (como hicisteis vosotros).
+**hosts-databases**
+```json
+"hosts-databases": [{ "type": "mysql", "name": "kea", "user": "kea", "password": "1234", "host": "localhost" }]
+```
+Reservas guardadas en MySQL en vez de en el `.conf`.
 
 ## expired-leases-processing
 - Controla cada cuánto se revisan y limpian concesiones caducadas (`reclaim-timer-wait-time`), cada cuánto se eliminan del todo las ya recicladas (`flush-reclaimed-timer-wait-time`), cuánto tiempo se conservan antes de borrarlas (`hold-reclaimed-time`), y límites de carga por ciclo para no saturar el servidor (`max-reclaim-leases`, `max-reclaim-time`).
+**expired-leases-processing**
+```json
+"expired-leases-processing": { "reclaim-timer-wait-time": 10, "hold-reclaimed-time": 3600 }
+```
+Revisa caducadas cada 10 s; las borra del todo tras 1 h.
 
 ## Temporizadores globales
 - `"renew-timer": 900`: a los cuántos segundos el cliente debe intentar renovar su IP con el mismo servidor.
 - `"rebind-timer": 1800`: si la renovación falla, a partir de aquí el cliente intenta hablar con *cualquier* servidor DHCP.
 - `"valid-lifetime": 3600`: duración total de la concesión si no se indica otra cosa (es el mismo parámetro que ajustasteis a `600`/`800:00:00` en vuestra práctica).
+**Temporizadores globales**
+```json
+"renew-timer": 900, "rebind-timer": 1800, "valid-lifetime": 3600
+```
+Renovar a los 15 min; si falla, buscar otro servidor a los 30 min; concesión dura 1 h.
 
 ## option-data (nivel global)
 - Opciones DHCP que se envían a todos los clientes salvo que algo más específico (clase, subred, reserva) las sobrescriba.
 - Ejemplos del fichero: `domain-name-servers` (DNS), `domain-name` (código 15, dominio por defecto), `domain-search` (dominios donde probar resolver nombres cortos), `boot-file-name` (arranque por red/PXE), `default-ip-ttl` (TTL por defecto de los paquetes del cliente).
 - Nota técnica: las comas dentro de un valor de opción deben escaparse con `\\,` porque JSON usa comas como separador de campos.
+**option-data (global)**
+```json
+{ "name": "domain-name-servers", "data": "8.8.8.8, 8.8.4.4" }
+```
+DNS enviado a todos los clientes salvo que una subred lo sobrescriba.
 
 ## client-classes
 - Permite clasificar clientes automáticamente según características del paquete que envían (ej. un `test` que mira el *vendor* del dispositivo) y darles un trato distinto: otro `next-server`, otro `boot-file-name`, etc. Pensado para VoIP, impresoras, PXE... no lo habéis necesitado en la práctica.
+**client-classes**
+```json
+{ "name": "voip", "test": "substring(option[60].hex,0,6) == 'Aastra'", "next-server": "192.0.2.254" }
+```
+A los teléfonos VoIP detectados, servidor de arranque distinto.
 
 ## hooks-libraries (comentado)
 - Módulos opcionales que amplían Kea: registro forense de auditoría (`libdhcp_legal_log`), identificación flexible de clientes por expresiones (`libdhcp_flex_id`), soporte de base de datos MySQL (`libdhcp_mysql`). No cargado por defecto.
+**hooks-libraries**
+```json
+"hooks-libraries": [{ "library": "/usr/lib/kea/hooks/libdhcp_legal_log.so" }]
+```
+Activa registro forense de cada concesión.
 
 ## subnet4 (la parte que sí habéis configurado de verdad)
 - `"id"`: identificador numérico único de la subred dentro de Kea.
@@ -537,10 +582,25 @@ A diferencia de lo que ocurre con los archivos de configuración de `netplan`, e
 - `"interface"` (comentado): fuerza qué interfaz de red selecciona esta subred, útil con varias subredes a la vez.
 - `"relay"` (comentado): en vez de interfaz local, selecciona la subred según la IP de un *relay* DHCP que reenvía las peticiones desde otra red.
 - `"option-data"` dentro de la subred: mismas opciones que el bloque global (routers, DNS...) pero solo aplicadas a esta subred — así es como configurasteis vuestro `routers`.
+**subnet4**
+```json
+{ "id": 1, "subnet": "172.16.5.0/24", "pools": [{ "pool": "172.16.5.21 - 172.16.5.30" }] }
+```
+La subred y el rango que ya usáis.
 
 ## reservations
 - Reserva una IP concreta a un cliente concreto, identificándolo por distintos métodos: `hw-address` (MAC, el que usasteis), `client-id`, `duid` (identificador DHCPv6 reutilizado), `circuit-id` (insertado por un relay). Cada reserva puede llevar también opciones propias (ej. DNS distinto solo para ese host) o campos de arranque PXE.
 - `flex-id`: mecanismo más avanzado que identifica al cliente mediante una expresión personalizada en vez de un campo fijo (requiere el hook `flex_id`).
+**reservations**
+```json
+{ "hw-address": "08:00:27:aa:bb:cc", "ip-address": "172.16.5.5" }
+```
+Esa MAC siempre recibe la `.5` (impresora, por ejemplo).
 
 ## loggers
 - Define qué registra el servicio y dónde: `"name": "kea-dhcp4"` es el logger del propio proceso. `"output"` indica archivo, `stdout`, `stderr` o `syslog`. `"severity"` filtra el nivel (`INFO`, `WARN`, `ERROR`...), y `"debuglevel"` afina el detalle si se usa `DEBUG`. Rotación de logs opcional vía `maxsize`/`maxver`.
+**loggers**
+```json
+"loggers": [{ "name": "kea-dhcp4", "output-options": [{ "output": "/var/log/kea/kea-dhcp4.log" }], "severity": "INFO" }]
+```
+Registra eventos nivel INFO en ese fichero.
