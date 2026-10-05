@@ -491,6 +491,7 @@ Sí, siempre que estén coordinados en modo failover (reparto o respaldo del mis
 
 
 # Anexo: Explicación del archivo de configuración por defecto de Kea (kea-dhcp4.conf)
+A diferencia de lo que ocurre con los archivos de configuración de `netplan`, en formato yaml, en los que es vital respetar los espacios, el archivo de configuración de kea utiliza `json`, en el que la estructura la determinan los símbolos.
 
 ## Cabecera y estructura general
 - Comentarios iniciales: advierten que la configuración de fábrica no escucha en ninguna interfaz y que casi todo viene comentado o de ejemplo — hay que editarla para que sirva IPs de verdad.
