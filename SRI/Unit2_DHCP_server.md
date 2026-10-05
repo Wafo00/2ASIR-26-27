@@ -4,10 +4,10 @@
 
 ## 1. Instalar
 
-```
+```bash
 sudo apt update
 ```
-```
+```bash
 sudo apt install kea
 ```
 
@@ -15,13 +15,13 @@ Durante la instalación, al configurar la contraseña de `kea-ctrl-agent`, elegi
 
 ## 2. Configurar interfaz y rango
 
-```
+```bash
 sudo cp /etc/kea/kea-dhcp4.conf /etc/kea/kea-dhcp4.conf.bak
 ```
 
 Editar con `nano`, o sobrescribir de una vez (más seguro frente a errores de copiar/pegar):
 
-```
+```bash
 sudo tee /etc/kea/kea-dhcp4.conf > /dev/null << 'EOF'
 {
   "Dhcp4": {
@@ -60,7 +60,7 @@ Sustituir interfaz (`ip a`), red y rango por los propios. La IP del servidor deb
 
 ## 3. Validar sintaxis
 
-```
+```bash
 sudo kea-dhcp4 -t /etc/kea/kea-dhcp4.conf
 ```
 
@@ -68,35 +68,41 @@ sudo kea-dhcp4 -t /etc/kea/kea-dhcp4.conf
 
 Si falla con `Syntax check failed with: Unable to open file` pese a tener el fichero con permisos correctos (`root:root`, `644`), es un bloqueo de **AppArmor**, no de sintaxis ni permisos. Confirmar:
 
-```
+```bash
 sudo dmesg | grep -i apparmor | grep -i kea
 ```
 
 Líneas `DENIED` con `dac_override`/`dac_read_search` confirman la causa. Solución:
 
-```
+```bash
 sudo apt install apparmor-utils
+```
+```bash
 sudo aa-complain /usr/sbin/kea-dhcp4
+```
+```bash
 sudo kea-dhcp4 -t /etc/kea/kea-dhcp4.conf
 ```
 
 ## 4. Arrancar y comprobar
 
-```
+```bash
 sudo systemctl restart kea-dhcp4-server
 ```
-```
+```bash
 sudo systemctl status kea-dhcp4-server
 ```
 
-Si falla: `journalctl -u kea-dhcp4-server -e`
+Si falla, usar: 
+```bash
+journalctl -u kea-dhcp4-server -e
+```
 
 ## 5. Configurar para autoarranque
-
-```
+```bash
 sudo systemctl enable kea-dhcp4-server
 ```
-```
+```bash
 systemctl is-enabled kea-dhcp4-server
 ```
 
@@ -114,28 +120,28 @@ network:
       dhcp4: true
 ```
 
-```
+```bash
 sudo netplan apply
 ```
-```
+```bash
 ip a
 ```
 
 Debe recibir IP del pool, marcada `dynamic`. Si no, o quedan IPs mezcladas:
 
-```
+```bash
 sudo ip addr flush dev enp0s3
 ```
-```
+```bash
 sudo netplan apply
 ```
 
 Para renovar en cliente con NetworkManager:
 
-```
+```bash
 sudo nmcli device disconnect enp0s3
 ```
-```
+```bash
 sudo nmcli device connect enp0s3
 ```
 
@@ -150,22 +156,22 @@ ipconfig /renew
 Si repite la misma IP, es comportamiento normal (*sticky lease*: mientras no caduque y la MAC coincida, el servidor intenta devolver la misma).
 
 ## Operaciones habituales
-```
+```bash
 nmcli -f ALL device show | grep -i dhcp_server_identifier
 ```
 Servicor DHCP del que recibe IP el cliente
 
-```
+```bash
 sudo cat /var/lib/kea/kea-leases4.csv
 ```
 Concesiones activas.
 
-```
+```bash
 sudo journalctl -u kea-dhcp4-server -f
 ```
 Log en tiempo real.
 
-```
+```bash
 sudo systemctl reload kea-dhcp4-server
 ```
 Aplica cambios de configuración sin cortar concesiones activas (preferible a `restart` con clientes ya conectados).
@@ -178,10 +184,10 @@ Aplica cambios de configuración sin cortar concesiones activas (preferible a `r
 ```
 En segundos. Editar, validar y aplicar:
 
-```
+```bash
 sudo kea-dhcp4 -t /etc/kea/kea-dhcp4.conf
 ```
-```
+```bash
 sudo systemctl reload kea-dhcp4-server
 ```
 
@@ -484,8 +490,7 @@ Comprobar la concesión en el servidor: expandir el ámbito → **Concesiones de
 Sí, siempre que estén coordinados en modo failover (reparto o respaldo del mismo ámbito entre ambos). Sin esa coordinación, dos servidores DHCP independientes en la misma red compiten y dan asignaciones inconsistentes.
 
 
-# Anexo: archivo de configuración DHCP (Kea en Ubuntu) con explicaciones tal como viene de serie  
-# Explicación del archivo de configuración por defecto de Kea (kea-dhcp4.conf)
+# Anexo: Explicación del archivo de configuración por defecto de Kea (kea-dhcp4.conf)
 
 ## Cabecera y estructura general
 - Comentarios iniciales: advierten que la configuración de fábrica no escucha en ninguna interfaz y que casi todo viene comentado o de ejemplo — hay que editarla para que sirva IPs de verdad.
