@@ -482,3 +482,59 @@ Comprobar la concesión en el servidor: expandir el ámbito → **Concesiones de
 ## Preguntas y respuestas
 ### ¿Puede haber dos servidores DHCP en una misma red?
 Sí, siempre que estén coordinados en modo failover (reparto o respaldo del mismo ámbito entre ambos). Sin esa coordinación, dos servidores DHCP independientes en la misma red compiten y dan asignaciones inconsistentes.
+
+
+# Anexo: archivo de configuración DHCP (Kea en Ubuntu) con explicaciones tal como viene de serie  
+# Explicación del archivo de configuración por defecto de Kea (kea-dhcp4.conf)
+
+## Cabecera y estructura general
+- Comentarios iniciales: advierten que la configuración de fábrica no escucha en ninguna interfaz y que casi todo viene comentado o de ejemplo — hay que editarla para que sirva IPs de verdad.
+- `"Dhcp4": { ... }`: bloque raíz. Todo lo que afecta al servidor DHCPv4 vive dentro de esta llave; otros servicios de Kea (DHCPv6, DDNS) ignoran este bloque.
+
+## interfaces-config
+- `"interfaces": [ ]`: lista de interfaces de red por las que escucha el servidor. Vacía por defecto — sin nada aquí, el servicio no responde a nadie.
+- `"dhcp-socket-type": "udp"` (comentado): por defecto usa *raw sockets* (recibe hasta paquetes de clientes sin IP todavía). Cambiar a `udp` solo si todo el tráfico llega ya reenviado (*relayed*).
+
+## control-sockets
+- Socket Unix para gestión en caliente: permite mandarle comandos al servidor en ejecución (recargar configuración, consultar estadísticas) sin reiniciarlo. Es lo que usamos para el `reload`.
+
+## lease-database
+- `"type": "memfile"`: guarda las concesiones en un fichero CSV en memoria/disco (lo que habéis estado consultando en `kea-leases4.csv`). Alternativa: bases de datos MySQL/PostgreSQL para redes grandes.
+- `"lfc-interval": 3600`: cada cuánto (segundos) se compacta ese fichero, eliminando entradas obsoletas.
+
+## hosts-databases (comentado)
+- Permite guardar las reservas de IP (por MAC) en una base de datos externa en vez de en el propio fichero de configuración. Útil solo con muchas reservas; en redes pequeñas se dejan en el `.conf` directamente (como hicisteis vosotros).
+
+## expired-leases-processing
+- Controla cada cuánto se revisan y limpian concesiones caducadas (`reclaim-timer-wait-time`), cada cuánto se eliminan del todo las ya recicladas (`flush-reclaimed-timer-wait-time`), cuánto tiempo se conservan antes de borrarlas (`hold-reclaimed-time`), y límites de carga por ciclo para no saturar el servidor (`max-reclaim-leases`, `max-reclaim-time`).
+
+## Temporizadores globales
+- `"renew-timer": 900`: a los cuántos segundos el cliente debe intentar renovar su IP con el mismo servidor.
+- `"rebind-timer": 1800`: si la renovación falla, a partir de aquí el cliente intenta hablar con *cualquier* servidor DHCP.
+- `"valid-lifetime": 3600`: duración total de la concesión si no se indica otra cosa (es el mismo parámetro que ajustasteis a `600`/`800:00:00` en vuestra práctica).
+
+## option-data (nivel global)
+- Opciones DHCP que se envían a todos los clientes salvo que algo más específico (clase, subred, reserva) las sobrescriba.
+- Ejemplos del fichero: `domain-name-servers` (DNS), `domain-name` (código 15, dominio por defecto), `domain-search` (dominios donde probar resolver nombres cortos), `boot-file-name` (arranque por red/PXE), `default-ip-ttl` (TTL por defecto de los paquetes del cliente).
+- Nota técnica: las comas dentro de un valor de opción deben escaparse con `\\,` porque JSON usa comas como separador de campos.
+
+## client-classes
+- Permite clasificar clientes automáticamente según características del paquete que envían (ej. un `test` que mira el *vendor* del dispositivo) y darles un trato distinto: otro `next-server`, otro `boot-file-name`, etc. Pensado para VoIP, impresoras, PXE... no lo habéis necesitado en la práctica.
+
+## hooks-libraries (comentado)
+- Módulos opcionales que amplían Kea: registro forense de auditoría (`libdhcp_legal_log`), identificación flexible de clientes por expresiones (`libdhcp_flex_id`), soporte de base de datos MySQL (`libdhcp_mysql`). No cargado por defecto.
+
+## subnet4 (la parte que sí habéis configurado de verdad)
+- `"id"`: identificador numérico único de la subred dentro de Kea.
+- `"subnet"`: la red en notación CIDR (vuestra `172.16.5.0/24`).
+- `"pools"`: el rango de IPs que Kea puede repartir dentro de esa subred.
+- `"interface"` (comentado): fuerza qué interfaz de red selecciona esta subred, útil con varias subredes a la vez.
+- `"relay"` (comentado): en vez de interfaz local, selecciona la subred según la IP de un *relay* DHCP que reenvía las peticiones desde otra red.
+- `"option-data"` dentro de la subred: mismas opciones que el bloque global (routers, DNS...) pero solo aplicadas a esta subred — así es como configurasteis vuestro `routers`.
+
+## reservations
+- Reserva una IP concreta a un cliente concreto, identificándolo por distintos métodos: `hw-address` (MAC, el que usasteis), `client-id`, `duid` (identificador DHCPv6 reutilizado), `circuit-id` (insertado por un relay). Cada reserva puede llevar también opciones propias (ej. DNS distinto solo para ese host) o campos de arranque PXE.
+- `flex-id`: mecanismo más avanzado que identifica al cliente mediante una expresión personalizada en vez de un campo fijo (requiere el hook `flex_id`).
+
+## loggers
+- Define qué registra el servicio y dónde: `"name": "kea-dhcp4"` es el logger del propio proceso. `"output"` indica archivo, `stdout`, `stderr` o `syslog`. `"severity"` filtra el nivel (`INFO`, `WARN`, `ERROR`...), y `"debuglevel"` afina el detalle si se usa `DEBUG`. Rotación de logs opcional vía `maxsize`/`maxver`.
