@@ -82,6 +82,8 @@ sudo kea-dhcp4 -t /etc/kea/kea-dhcp4.conf
 
 ```
 sudo systemctl restart kea-dhcp4-server
+```
+```
 sudo systemctl status kea-dhcp4-server
 ```
 
@@ -91,6 +93,8 @@ Si falla: `journalctl -u kea-dhcp4-server -e`
 
 ```
 sudo systemctl enable kea-dhcp4-server
+```
+```
 systemctl is-enabled kea-dhcp4-server
 ```
 
@@ -110,6 +114,8 @@ network:
 
 ```
 sudo netplan apply
+```
+```
 ip a
 ```
 
@@ -117,6 +123,8 @@ Debe recibir IP del pool, marcada `dynamic`. Si no, o quedan IPs mezcladas:
 
 ```
 sudo ip addr flush dev enp0s3
+```
+```
 sudo netplan apply
 ```
 
@@ -124,12 +132,16 @@ Para renovar en cliente con NetworkManager:
 
 ```
 sudo nmcli device disconnect enp0s3
+```
+```
 sudo nmcli device connect enp0s3
 ```
 
 Si el cliente es Windows:
 ```powershell
 ipconfig /release
+```
+```powershell
 ipconfig /renew
 ```
 
@@ -140,6 +152,7 @@ Si repite la misma IP, es comportamiento normal (*sticky lease*: mientras no cad
 nmcli -f ALL device show | grep -i dhcp_server_identifier
 ```
 Servicor DHCP del que recibe IP el cliente
+
 ```
 sudo cat /var/lib/kea/kea-leases4.csv
 ```
@@ -165,6 +178,8 @@ En segundos. Editar, validar y aplicar:
 
 ```
 sudo kea-dhcp4 -t /etc/kea/kea-dhcp4.conf
+```
+```
 sudo systemctl reload kea-dhcp4-server
 ```
 
@@ -188,6 +203,8 @@ Editar `"pools"` dentro de `subnet4` en `kea-dhcp4.conf`, validar y `reload` igu
 
 ```powershell
 New-NetIPAddress -InterfaceAlias "Ethernet" -IPAddress <IP_SERVIDOR> -PrefixLength 24 -DefaultGateway <IP_GATEWAY>
+```
+```powershell
 Set-DnsClientServerAddress -InterfaceAlias "Ethernet" -ServerAddresses <IP_SERVIDOR>
 ```
 
@@ -231,6 +248,8 @@ Si no está instalado:
 
 ```powershell
 Install-WindowsFeature -Name DNS -IncludeManagementTools
+```
+```powershell
 Set-DhcpServerv4OptionValue -ScopeId <RED> -DnsServer <IP_SERVIDOR>
 ```
 
@@ -264,6 +283,8 @@ MAC del cliente: `ipconfig /all`, o `arp -a` en el servidor si ya hubo tráfico.
 
 ```powershell
 Get-DhcpServerv4Scope
+```
+```powershell
 Get-Service -Name DHCPServer
 ```
 
@@ -280,6 +301,8 @@ Get-DhcpServerv4Lease -ScopeId <RED>
 En un cliente Windows:
 ```powershell
 ipconfig /release
+```
+```powershell
 ipconfig /renew
 ```
 (Lista todos los ámbitos del servidor, y las concesiones del rango indicado)  
@@ -287,6 +310,8 @@ ipconfig /renew
 En un cliente Ubuntu (NetworkManager):
 ```bash
 sudo nmcli device disconnect enp0s3
+```
+```
 sudo nmcli device connect enp0s3
 ```
 
@@ -304,6 +329,8 @@ Cambiar el rango del pool.
 
 ```powershell
 Get-DhcpServerv4Reservation -ScopeId <RED>
+```
+```powershell
 Remove-DhcpServerv4Reservation -IPAddress <IP>
 ```
 Listar / eliminar reservas.
@@ -409,6 +436,8 @@ En un cliente Windows, renovar la IP:
 
 ```powershell
 ipconfig /release
+```
+```powershell
 ipconfig /renew
 ```
 
@@ -416,6 +445,8 @@ En un cliente Ubuntu (NetworkManager):
 
 ```bash
 sudo nmcli device disconnect enp0s3
+```
+```bash
 sudo nmcli device connect enp0s3
 ```
 
