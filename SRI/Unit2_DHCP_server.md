@@ -602,4 +602,4 @@ Esa MAC siempre recibe la `.5` (impresora, por ejemplo).
 ```json
 "loggers": [{ "name": "kea-dhcp4", "output-options": [{ "output": "/var/log/kea/kea-dhcp4.log" }], "severity": "INFO" }]
 ```
-Registra eventos nivel INFO en ese fichero.
+Registra eventos nivel INFO en ese fichero. Si se modifica la ruta por defecto, hay que crear previamente la ruta donde se escribirá el archivo.  
