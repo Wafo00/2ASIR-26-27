@@ -436,7 +436,6 @@ Clic derecho sobre el servidor → **Todas las tareas** → **Reiniciar** (opcio
 
 > Si aparece el aviso *"Requiere configuración para Servidor DHCP en \<equipo\>"* al abrir la consola, y no hay AD en el entorno, es un falso positivo — no afecta al servicio si el ámbito está activo y reparte IPs.
 
-## 10. Verificar desde un cliente
 
 ## 10. Verificar desde un cliente
 
