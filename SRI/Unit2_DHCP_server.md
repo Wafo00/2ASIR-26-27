@@ -55,7 +55,7 @@ sudo tee /etc/kea/kea-dhcp4.conf > /dev/null << 'EOF'
 }
 EOF
 ```
-
+(Un día tiene 86400 segundos)
 Sustituir interfaz (`ip a`), red y rango por los propios. La IP del servidor debe quedar fuera del pool.
 
 ## 3. Validar sintaxis
@@ -520,7 +520,7 @@ Permite `reload` sin reiniciar el servicio.
 ```json
 "lease-database": { "type": "memfile", "lfc-interval": 3600 }
 ```
-Guarda concesiones en CSV, compactado cada hora.
+Guarda concesiones en CSV, compactado cada hora. (Un día tiene 86400 segundos)
 
 ## hosts-databases (comentado)
 - Permite guardar las reservas de IP (por MAC) en una base de datos externa en vez de en el propio fichero de configuración. Útil solo con muchas reservas; en redes pequeñas se dejan en el `.conf` directamente (como hicisteis vosotros).
