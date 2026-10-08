@@ -36,7 +36,7 @@ sudo apt update
 sudo apt install bind9 bind9-utils bind9-dnsutils
 ```
 
-`bind9-utils` aporta `named-checkconf` y `named-checkzone`; `bind9-dnsutils` aporta `dig` y `nslookup`.
+`bind9-utils` aporta los comandos `named-checkconf` y `named-checkzone`; `bind9-dnsutils` aporta `dig` y `nslookup`.
 
 ## 2. Opciones generales y reenvío
 
