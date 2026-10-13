@@ -110,7 +110,7 @@ git switch -c <nueva-rama>
 ```
 Crea una rama y se pasa a ella.
 
-*(trabajáis y hacéis commits como siempre)*
+*(trabajo y hago commits como siempre)*
 
 ```bash
 git push -u origin <nueva-rama>
