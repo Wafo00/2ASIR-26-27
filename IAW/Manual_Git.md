@@ -112,6 +112,8 @@ Crea una rama y se pasa a ella.
 
 *(trabajo y hago commits como siempre)*
 
+> En tutoriales antiguos: `git checkout -b <nueva-rama>` hace lo mismo (ver nota al final de la sección 4).
+
 ```bash
 git push -u origin <nueva-rama>
 ```
