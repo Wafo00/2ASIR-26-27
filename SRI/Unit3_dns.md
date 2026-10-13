@@ -164,7 +164,7 @@ sudo named-checkzone 5.16.172.in-addr.arpa /etc/bind/zones/db.172.16.5
 ```bash
 sudo systemctl restart bind9
 sudo systemctl status bind9
-systemctl is-enabled bind9
+systemctl is-enabled named
 ```
 
 Debe salir `active (running)` y `enabled` (viene habilitado por defecto). Si falla: `journalctl -u bind9 -e`
