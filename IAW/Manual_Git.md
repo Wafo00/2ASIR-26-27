@@ -1,7 +1,7 @@
 # Git: manual de supervivencia
 
 Receta de cocina para el día a día. Los comandos están **en el orden en que se usan**.
-Lo que va entre `< >` hay que sustituirlo por vuestro valor.
+Lo que va entre `< >` hay que sustituirlo por mi valor.
 
 ---
 
@@ -30,14 +30,14 @@ git config --list
 
 GitHub ya no acepta la contraseña normal por HTTPS. Lo más cómodo es una clave SSH:
 ```bash
-ssh-keygen -t ed25519 -C "tu@correo.com"
+ssh-keygen -t ed25519 -C "mi@correo.com"
 cat ~/.ssh/id_ed25519.pub
 ```
-Copiad el resultado en GitHub → *Settings → SSH and GPG keys → New SSH key*. Después:
+Copio el resultado en GitHub → *Settings → SSH and GPG keys → New SSH key*. Después:
 ```bash
 ssh -T git@github.com
 ```
-Debe saludaros con vuestro usuario. Si es así, ya está.
+Debe saludarme con mi usuario. Si es así, ya está.
 
 ---
 
@@ -63,19 +63,19 @@ git remote -v
 
 ## 2. El ciclo de cada día
 
-Repetid esto siempre, en este orden:
+Repetir esto siempre, en este orden:
 
 ```bash
 git pull
 ```
-**1. Traer** lo que hayan subido los demás. Hacedlo siempre antes de empezar a trabajar.
+**1. Traer** lo que hayan subido los demás. Hacerlo siempre antes de empezar a trabajar.
 
-*(trabajáis: editáis, creáis, borráis ficheros...)*
+*(trabajo: edito, creo, borro ficheros...)*
 
 ```bash
 git status
 ```
-**2. Mirar** qué ha cambiado. El comando que más vais a usar: ante la duda, `git status`.
+**2. Mirar** qué ha cambiado. El comando que más vaoy a usar: ante la duda, `git status`.
 
 ```bash
 git diff
@@ -91,14 +91,14 @@ git add -A
 ```bash
 git commit -m "Descripción breve de lo que he hecho"
 ```
-**5. Guardar** una "foto" en vuestro repositorio local. El mensaje debe decir qué hicisteis, no "cambios" ni "asdf".
+**5. Guardar** una "foto" en mi repositorio local. El mensaje debe decir qué hice, no "cambios" ni "asdf".
 
 ```bash
 git push
 ```
 **6. Subir** los commits a GitHub.
 
-> Primera vez que subís un repositorio nuevo (Opción B): `git push -u origin main`.
+> Primera vez que subo un repositorio nuevo (Opción B): `git push -u origin main`.
 > Después basta con `git push`.
 
 ---
@@ -115,7 +115,7 @@ Crea una rama y se pasa a ella.
 ```bash
 git push -u origin <nueva-rama>
 ```
-Sube la rama a GitHub (solo la primera vez usa `-u`).
+Subo la rama a GitHub (solo la primera vez uso `-u`).
 
 ```bash
 git switch main
@@ -147,7 +147,7 @@ Otros: `git branch` lista las ramas y `git switch <rama>` cambia de una a otra.
 | Un commit **ya subido** estaba mal | `git revert <hash>` (crea un commit que lo anula) |
 
 ⚠️ `git restore <fichero>` **no se puede deshacer**: los cambios se pierden para siempre.
-⚠️ No uséis `--amend` sobre commits ya subidos: reescribís la historia y liáis a todo el equipo.
+⚠️ No usar `--amend` sobre commits ya subidos: reescribo la historia y lio a todo el equipo.
 
 **Guardar cambios a medias para cambiar de rama o hacer `pull`:**
 ```bash
@@ -156,6 +156,18 @@ git stash pop
 ```
 `stash` los aparca y `pop` los recupera.
 
+### Nota: `checkout` vs `switch` / `restore`
+
+En tutoriales y foros veré `git checkout` para casi todo. Es el comando antiguo: hacía **dos cosas distintas** (cambiar de rama y recuperar ficheros), y por eso confundía. Desde Git 2.23 (2019) se separó en dos comandos más claros. `checkout` **sigue funcionando** y no está retirado, así que si copio un comando antiguo, me valdrá.
+
+| Para qué | Antiguo (`checkout`) | Actual |
+|---|---|---|
+| Cambiar de rama | `git checkout <rama>` | `git switch <rama>` |
+| Crear rama y cambiarse a ella | `git checkout -b <rama>` | `git switch -c <rama>` |
+| Descartar cambios de un fichero | `git checkout -- <fichero>` | `git restore <fichero>` |
+| Sacar un fichero del *staging* | `git reset HEAD <fichero>` | `git restore --staged <fichero>` |
+
+En este manual uso los actuales. Si veo `checkout` en otro sitio, busco en la tabla su equivalente.
 ---
 
 ## 5. Conflictos (cuando dos tocan lo mismo)
@@ -171,8 +183,8 @@ la versión del otro
 ```
 
 Para resolverlo:
-1. Abrid el fichero y **dejad solo lo que debe quedar**, borrando las tres líneas de marcas (`<<<<<<<`, `=======`, `>>>>>>>`).
-2. Guardad y ejecutad:
+1. Abro el fichero y **dejo solo lo que debe quedar**, borrando las tres líneas de marcas (`<<<<<<<`, `=======`, `>>>>>>>`).
+2. Guardo y ejecuto:
 ```bash
 git add <fichero>
 git commit -m "Resuelvo conflicto en <fichero>"
@@ -222,9 +234,7 @@ git pull → (trabajar) → git status → git add -A → git commit -m "..." �
 1. `git pull` antes de empezar, `git push` al terminar.
 2. `git status` ante cualquier duda.
 3. Commits pequeños y con mensaje claro.
-4. Nunca subáis contraseñas ni claves privadas (`.gitignore` es vuestro amigo).
-5. Si algo sale raro, **no improvises**: parad, leed el mensaje de error y mirad `git status`.
+4. Nunca subir contraseñas ni claves privadas (`.gitignore` es mi amigo).
+5. Si algo sale raro, **no improviso**: paro, leo el mensaje de error y miro `git status`.
 
 ---
-
-*Basado en el taller de introducción a Git y GitHub de José Juan Sánchez (CC BY-SA 4.0), ampliado y adaptado.*
