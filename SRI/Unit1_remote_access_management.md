@@ -28,7 +28,7 @@ network:
         - to: default
           via: 172.16.0.1
       nameservers:
-        address: [8.8.8.8, 8.8.4.4]
+        addresses: [8.8.8.8, 8.8.4.4]
 ```
 ### Excepción en el firewall de windows para poder hacer pings mutuos  
 ```yaml
