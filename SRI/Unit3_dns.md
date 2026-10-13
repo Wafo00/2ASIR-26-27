@@ -251,6 +251,28 @@ nslookup equipo1.ASIR2.local 172.16.6.20
 
 > **Nota sobre `.local`:** en clientes Linux con `avahi`/`nss-mdns`, los nombres `.local` se intentan resolver por mDNS. Puede ocurrir que `dig` y `nslookup` funcionen y que `ping equipo1.ASIR2.local` falle. Para comprobar el DNS, usar siempre `dig` o `nslookup`.
 
+### Probar desde un cliente
+
+El cliente debe estar en la **misma red** que el servidor; entre redes distintas, `dig` da *timeout*. Configuración rápida de IP fija y DNS en un cliente Ubuntu (sin puerta de enlace, que para esta prueba no hace falta). Antes, copia de seguridad del perfil:
+
+```
+sudo cp /etc/netplan/90-NM-*.yaml ~/90-NM.yaml.orig
+CON=$(nmcli -t -f NAME,DEVICE connection show --active | grep ':enp0s3$' | cut -d: -f1)
+sudo nmcli connection modify "$CON" ipv4.method manual ipv4.addresses 172.16.6.40/24 ipv4.gateway "" ipv4.dns 172.16.6.20 ipv4.dns-search ASIR2.local ipv4.ignore-auto-dns yes
+sudo nmcli connection up "$CON"
+resolvectl status | grep -i 'dns server'
+dig equipo1.ASIR2.local +short
+```
+
+Con el DNS configurado, `dig` sin `@` también funciona. Para volver a la configuración anterior:
+
+```
+sudo cp ~/90-NM.yaml.orig /etc/netplan/90-NM-*.yaml
+sudo netplan apply
+```
+
+> Los ficheros `.bak` de `/etc/netplan` los ignora netplan: editarlos no tiene efecto. Ver cuáles están activos con `ls /etc/netplan/`.
+
 ## 8. Configurar los clientes
 
 **Por DHCP (Kea)**, en `option-data` de la subred:
@@ -368,6 +390,14 @@ sudo systemctl restart named
 
 Qué hace cada línea, por orden: actualiza `listen-on` y `allow-*`; renombra la zona inversa y su fichero en `named.conf.local`; renombra el fichero de la zona inversa; cambia las IPs de los registros `A` y sube el serial; sube el serial de la zona inversa (sus `PTR` no cambian, solo llevan el último octeto); valida y reinicia. Adaptar los números a la red real. Después, actualizar también la subred, el pool y el gateway del DHCP, y las reservas.
 
+Para encontrar la IP antigua en el resto de configuraciones de la máquina (ejecutar en cada máquina con servicios):
+
+```
+sudo grep -rn "172\.16\.5" /etc/bind /etc/kea /etc/nginx /etc/netplan
+```
+
+Solo deben quedar copias `.bak`. Se ejecuta sin `2>/dev/null`: ocultaría los errores de carpetas inexistentes.
+
 ---
 
 | Síntoma | Causa probable |
@@ -375,8 +405,10 @@ Qué hace cada línea, por orden: actualiza `listen-on` y `allow-*`; renombra la
 | `NXDOMAIN` para un equipo | Registro ausente, falta el punto final en un FQDN, o no se subió el serial / no se recargó. |
 | `SERVFAIL` en dominios externos | Forwarders inalcanzables (sin salida a internet o firewall). |
 | `REFUSED` | El cliente está fuera de `allow-query` / `allow-recursion`. |
-| Timeout sin respuesta | Firewall (`sudo ufw allow 53`), o la IP del servidor no está en `listen-on`. Comprobar con `ip -4 a` y `sudo ss -tulpn \| grep named`. |
+| Timeout sin respuesta | Firewall (`sudo ufw allow 53`), o la IP del servidor no está en `listen-on`. Comprobar con `ip -4 a` y `sudo ss -tulpn \| grep named`. También si el cliente está en otra red distinta a la del servidor. |
 | Timeout tras cambiar la IP del servidor | `listen-on` y las zonas siguen con la IP o red antigua (ver "Cambiar la IP o la red del servidor"). |
+| `dig` sin `@` no devuelve nada | El cliente usa otro DNS (por ejemplo `8.8.8.8`). Comprobar con `resolvectl status`. |
+| Respuestas inconsistentes o *timeouts* intermitentes | IP duplicada: dos máquinas (por ejemplo clones) con la misma IP. Cada máquina debe tener la suya. |
 | `dig` funciona pero `ping nombre.local` falla | `avahi`/`nss-mdns` intercepta los `.local`; no es un fallo del DNS. |
 | `systemctl is-enabled bind9` responde `alias` | Es normal: el servicio real es `named`; comprobar con `systemctl is-enabled named`. |
 | El servicio no arranca | Error en la configuración: `sudo named-checkconf` y `journalctl -u named -e`. Si no hay error visible, revisar AppArmor: `sudo dmesg \| grep -i apparmor \| grep named`. |
