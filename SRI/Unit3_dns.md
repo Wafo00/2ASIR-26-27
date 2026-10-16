@@ -10,12 +10,16 @@
 
 ## Cómo se forman los nombres de dominio
 
-Un nombre de dominio se lee **de derecha a izquierda**, de lo más general a lo más concreto. Cada tramo separado por puntos es una *etiqueta*.
+Un nombre de dominio se lee **de derecha a izquierda**, de lo más general a lo más concreto. Cada tramo separado por puntos es una *etiqueta* y cada etiqueta es un *nivel*:
 
 ```
-equipo1 . ASIR2 . local .
-host      dominio  TLD   raíz
+.                  ← raíz (nivel 0)
+└── es             ← TLD, dominio de primer nivel (nivel 1)
+    └── ejemplo    ← dominio de segundo nivel (nivel 2)
+        └── www    ← host o subdominio (nivel 3)
 ```
+
+Se lee `www.ejemplo.es.`: la raíz delega en `es`, `es` delega en `ejemplo`, y `ejemplo` define el host `www`. Cada nivel indica quién es el siguiente mediante registros `NS`. La raíz la sirven 13 identidades de servidores (letras A a M), replicadas en cientos de instancias por todo el mundo.
 
 | Nivel | Qué es | Ejemplo |
 |---|---|---|
@@ -24,7 +28,16 @@ host      dominio  TLD   raíz
 | Dominio de segundo nivel | El que registra una organización | `google.com`, `ASIR2.local` |
 | Subdominio / host | Lo que cada organización crea dentro de su dominio | `www.google.com`, `equipo1.ASIR2.local` |
 
-**A nivel global (DNS público):** hay un único árbol jerárquico y su gestión está **delegada**. La raíz la coordinan IANA/ICANN, cada TLD lo gestiona un registro, y las organizaciones registran sus dominios de segundo nivel a través de un registrador. Cada nivel indica quién es el siguiente mediante registros `NS`: para resolver `www.google.com`, un servidor pregunta a la raíz, esta lo remite al servidor de `com`, y este al de `google.com`.
+| Tipo de TLD | Qué es | Ejemplos |
+|---|---|---|
+| Genérico (gTLD) | Uso general, sin país asociado | `com`, `org`, `net`, `info`, `biz` |
+| Restringido o patrocinado | Reservado a un tipo de entidad | `edu`, `gov`, `mil`, `int` |
+| De país (ccTLD) | Dos letras (ISO 3166) | `es`, `fr`, `de`, `uk` |
+| Nuevos gTLD | Temas, marcas o ciudades | `app`, `dev`, `madrid` |
+| Infraestructura | Para el funcionamiento del propio DNS | `arpa` (de ahí `in-addr.arpa`, las zonas inversas) |
+| Uso especial o privado | No existen en el DNS público | `local`, `internal`, `home.arpa`, `localhost`, `test`, `example`, `invalid` |
+
+**A nivel global (DNS público):** hay un único árbol jerárquico y su gestión está **delegada**. La raíz la coordinan IANA/ICANN, cada TLD lo gestiona un registro, y las organizaciones registran sus dominios de segundo nivel a través de un registrador. Para resolver `www.google.com`, un servidor pregunta a la raíz, esta lo remite al servidor de `com`, y este al de `google.com`.
 
 **A nivel local (red privada):** la organización monta su propio servidor DNS y define una zona propia que solo se resuelve dentro de su red. No hace falta registrarla, pero no debe coincidir con un dominio público que se quiera seguir usando. Sufijos pensados para esto:
 
@@ -32,7 +45,7 @@ host      dominio  TLD   raíz
 |---|---|
 | `.internal` | Reservado para uso privado. |
 | `.home.arpa` | Reservado para redes domésticas (RFC 8375). |
-| `.local` | Reservado para mDNS (RFC 6762). En esta práctica se usa `ASIR2.local.` por indicación del docente. |
+| `.local` | Reservado para mDNS (RFC 6762). En esta práctica se usa `ASIR2.local.` |
 
 Reglas de los nombres:
 
@@ -58,6 +71,10 @@ Reglas de los nombres:
 | A / PTR / CNAME | Nombre → IPv4 / IP → nombre / alias de otro nombre. |
 | TTL | Segundos que otros pueden guardar en caché una respuesta. |
 | FQDN y punto final | Un nombre completo termina en punto (`equipo1.ASIR2.local.`). Sin punto, BIND le añade el nombre de la zona y queda duplicado. |
+| Primario y secundario | El primario (antes *maestro*) guarda la zona original y se edita ahí. El secundario (antes *esclavo*) guarda una copia que obtiene por transferencia. Ambos responden con autoridad (`aa`). |
+| Transferencia de zona | Copia de la zona del primario al secundario. `AXFR` copia la zona entera; `IXFR` solo los cambios. Va por TCP, puerto 53. |
+| NOTIFY | Aviso del primario al secundario de que la zona ha cambiado, para que la pida sin esperar. |
+| Refresh / Retry / Expire (SOA) | Cada cuántos segundos el secundario comprueba si hay cambios (Refresh), cada cuántos reintenta si falla (Retry), y a los cuántos sin contactar con el primario deja de responder (Expire). |
 
 ## 1. Instalar
 
@@ -324,6 +341,166 @@ sudo ufw status verbose
 
 `53`: DNS (TCP y UDP). `67/udp`: DHCP, solo si el servidor también reparte IPs. Añadir también los puertos de otros servicios del servidor (por ejemplo `80/tcp` y `8080/tcp` para web). Antes de cerrar la sesión SSH actual, comprobar que una sesión nueva entra.
 
+## 10. Servidor secundario (esclavo) y transferencia de zonas
+
+Un secundario da redundancia: si el primario cae, sigue respondiendo con la copia de las zonas. **Las zonas solo se editan en el primario**; el secundario las recibe por transferencia, siempre que el **serial suba** en cada cambio.
+
+Valores de ejemplo: primario `172.16.6.20`; secundario `ServerDNS30` en `172.16.6.30`. Sustituirlos por los reales. El secundario debe ser otra máquina, con una IP propia dentro de la red y que no coincida con ningún equipo.
+
+### 10.1 En el primario
+
+Autorizar la transferencia solo al secundario (sin esto, BIND la permite a cualquiera) y avisarle de los cambios. Ejecutar **una sola vez**:
+
+```
+sudo sed -i 's|type primary;|type primary;\n    allow-transfer { 172.16.6.30; };\n    also-notify { 172.16.6.30; };|' /etc/bind/named.conf.local
+```
+
+Registrar al secundario en las zonas (`NS`, `A` y `PTR`) y subir el serial (formato `AAAAMMDDNN`, siempre mayor que el anterior). También **una sola vez**:
+
+```
+sudo sed -i '/IN  NS  /a @           IN  NS  ServerDNS30.ASIR2.local.' /etc/bind/zones/db.ASIR2.local
+sudo sed -i '/IN  NS  /a @   IN  NS  ServerDNS30.ASIR2.local.' /etc/bind/zones/db.172.16.6
+echo 'ServerDNS30 IN  A   172.16.6.30' | sudo tee -a /etc/bind/zones/db.ASIR2.local > /dev/null
+echo '30  IN  PTR ServerDNS30.ASIR2.local.' | sudo tee -a /etc/bind/zones/db.172.16.6 > /dev/null
+sudo sed -i -E 's/[0-9]{10}( +; Serial)/2026101601\1/' /etc/bind/zones/db.ASIR2.local /etc/bind/zones/db.172.16.6
+```
+
+Validar y aplicar:
+
+```
+sudo named-checkconf
+sudo named-checkzone ASIR2.local /etc/bind/zones/db.ASIR2.local
+sudo named-checkzone 6.16.172.in-addr.arpa /etc/bind/zones/db.172.16.6
+sudo rndc reload
+```
+
+Si `ufw` está activo, permitir al secundario (las transferencias usan TCP 53):
+
+```
+sudo ufw allow from 172.16.6.30 to any port 53
+```
+
+### 10.2 En la máquina del secundario
+
+```
+sudo apt update
+sudo apt install bind9 bind9-utils bind9-dnsutils
+sudo cp /etc/bind/named.conf.options /etc/bind/named.conf.options.bak
+sudo tee /etc/bind/named.conf.options > /dev/null << 'EOF'
+options {
+    directory "/var/cache/bind";
+
+    listen-on { 127.0.0.1; 172.16.6.30; };
+    listen-on-v6 { none; };
+
+    allow-query     { localhost; 172.16.6.0/24; };
+    allow-recursion { localhost; 172.16.6.0/24; };
+
+    forwarders { 8.8.8.8; 8.8.4.4; };
+    forward only;
+
+    dnssec-validation auto;
+};
+EOF
+```
+
+Declarar las zonas como secundarias:
+
+```
+sudo cp /etc/bind/named.conf.local /etc/bind/named.conf.local.bak
+sudo tee -a /etc/bind/named.conf.local > /dev/null << 'EOF'
+
+zone "ASIR2.local" {
+    type secondary;
+    primaries { 172.16.6.20; };
+    file "/var/cache/bind/db.ASIR2.local";
+};
+
+zone "6.16.172.in-addr.arpa" {
+    type secondary;
+    primaries { 172.16.6.20; };
+    file "/var/cache/bind/db.172.16.6";
+};
+EOF
+sudo named-checkconf
+sudo systemctl restart named
+```
+
+- **`type secondary` y `primaries`:** indican que la zona no es propia y de dónde se copia. Son los nombres actuales de `slave` y `masters`.
+- **Ficheros de zona:** no hay que crearlos; se generan solos con la transferencia. Se guardan en `/var/cache/bind`, no en `/etc/bind`, porque AppArmor solo deja escribir al servicio en el primero.
+
+> Si la máquina del secundario tiene **varias IPs**, el primario ve la IP principal de la interfaz, que puede no ser la autorizada en `allow-transfer`. Fijar la IP de origen en `options` del secundario, una sola vez: `transfer-source 172.16.6.30;`.
+
+### 10.3 Comprobar la transferencia
+
+Desde el secundario, antes de nada, comprobar que llega al primario: `ping -c 2 172.16.6.20`. Después:
+
+```
+journalctl -u named -e --no-pager | grep -i -E "transfer|loaded serial"
+ls -l /var/cache/bind/
+dig @172.16.6.30 ASIR2.local SOA +short
+dig @172.16.6.20 ASIR2.local SOA +short
+```
+
+En el log debe aparecer `Transfer status: success`, en `ls` los dos ficheros de zona, y los dos `SOA` deben dar **el mismo serial**. Probar que el secundario responde con autoridad:
+
+```
+dig @172.16.6.30 equipo1.ASIR2.local | grep -E 'status|flags'
+dig @172.16.6.30 -x 172.16.6.21 +short
+```
+
+Debe salir `NOERROR`, el flag `aa`, y la IP `172.16.6.21` / el nombre `equipo1.ASIR2.local.`.
+
+Ver la transferencia completa de la zona, indicando la IP de origen autorizada (solo funciona desde el secundario; desde cualquier otro equipo da `Transfer failed`):
+
+```
+dig -b 172.16.6.30 @172.16.6.20 ASIR2.local AXFR
+```
+
+Forzar una transferencia y ver el estado de la zona en el secundario:
+
+```
+sudo rndc retransfer ASIR2.local
+sudo rndc zonestatus ASIR2.local
+```
+
+Hasta la primera transferencia, `zonestatus` responde `zone not loaded`: es normal.
+
+### 10.4 Probar la redundancia
+
+```
+sudo systemctl stop named
+```
+
+Ejecutarlo **en el primario**. Desde un cliente, `dig @172.16.6.30 equipo1.ASIR2.local +short` debe seguir respondiendo. Para recuperar el servicio: `sudo systemctl start named`. Si el primario estuviera caído más tiempo que el `Expire` del `SOA`, el secundario dejaría de responder.
+
+### 10.5 Que los clientes usen los dos servidores
+
+**Por DHCP (Kea):**
+
+```
+{ "name": "domain-name-servers", "data": "172.16.6.20, 172.16.6.30" }
+```
+
+**Por DHCP (Windows Server):**
+
+```
+Set-DhcpServerv4OptionValue -ScopeId <RED> -DnsServer 172.16.6.20,172.16.6.30
+```
+
+**Cliente Ubuntu con IP fija (netplan):**
+
+```
+nameservers:
+  addresses: [172.16.6.20, 172.16.6.30]
+```
+
+El cliente pregunta al primero y, si no responde, al segundo.
+
+### 10.6 Hacer un cambio con el secundario montado
+
+Editar solo el primario, **subir el serial** en el fichero cambiado, validar y `sudo rndc reload`. NOTIFY avisa al secundario, que copia el cambio en segundos. Comprobar que el serial es el mismo en ambos con `dig @<servidor> ASIR2.local SOA +short`.
+
 ## Operaciones habituales
 
 ```
@@ -388,7 +565,9 @@ sudo named-checkzone 6.16.172.in-addr.arpa /etc/bind/zones/db.172.16.6
 sudo systemctl restart named
 ```
 
-Qué hace cada línea, por orden: actualiza `listen-on` y `allow-*`; renombra la zona inversa y su fichero en `named.conf.local`; renombra el fichero de la zona inversa; cambia las IPs de los registros `A` y sube el serial; sube el serial de la zona inversa (sus `PTR` no cambian, solo llevan el último octeto); valida y reinicia. Adaptar los números a la red real. Después, actualizar también la subred, el pool y el gateway del DHCP, y las reservas.
+Qué hace cada línea, por orden: actualiza `listen-on` y `allow-*`; renombra la zona inversa y su fichero en `named.conf.local`; renombra el fichero de la zona inversa; cambia las IPs de los registros `A` y sube el serial; sube el serial de la zona inversa (sus `PTR` no cambian, solo llevan el último octeto); valida y reinicia. Adaptar los números a la red real.
+
+Con un secundario montado, actualizar también `allow-transfer` y `also-notify` en el primario, y `primaries` y `listen-on` en el secundario. Después, actualizar la subred, el pool y el gateway del DHCP, y las reservas.
 
 Para encontrar la IP antigua en el resto de configuraciones de la máquina (ejecutar en cada máquina con servicios):
 
@@ -414,3 +593,9 @@ Solo deben quedar copias `.bak`. Se ejecuta sin `2>/dev/null`: ocultaría los er
 | El servicio no arranca | Error en la configuración: `sudo named-checkconf` y `journalctl -u named -e`. Si no hay error visible, revisar AppArmor: `sudo dmesg \| grep -i apparmor \| grep named`. |
 | La búsqueda inversa no resuelve | Nombre de la zona inversa con los octetos sin invertir, o falta el punto final en el `PTR`. |
 | `named-checkzone` avisa de datos fuera de zona | Falta un punto final y el nombre se ha duplicado (`....ASIR2.local.ASIR2.local.`). |
+| `connection refused` en el log del secundario | El primario no escucha en esa IP: revisar su `listen-on` con `sudo ss -tulpn \| grep named` y que `named` esté activo. No es lo mismo que `REFUSED`. |
+| `Transfer status: REFUSED` | El primario rechaza la IP de origen del secundario: revisar `allow-transfer` y, si el secundario tiene varias IPs, fijar `transfer-source`. |
+| El secundario no se actualiza | No se subió el serial en el primario, o el primario no puede avisarle (firewall en TCP 53). Forzar con `sudo rndc retransfer ASIR2.local`. |
+| `permission denied` al guardar la zona en el secundario | El `file` de la zona apunta a `/etc/bind`; AppArmor solo deja escribir en `/var/cache/bind`. |
+| El secundario deja de responder tras un tiempo | Pasó el `Expire` del `SOA` sin contactar con el primario. |
+| Un bloque de comandos no hace efecto | Se ejecutó en la máquina equivocada: comprobar `hostname` antes de lanzar cada bloque, sobre todo entre primario y secundario. |
