@@ -9,6 +9,31 @@ Cliente --(1. ¿IP de nuevo.grupo.test?)--> Servidor DNS (BIND9) --> "192.168.1.
 Cliente --(2. abre la web en esa IP)-----> Servidor web (este equipo u otro)
 ```
 
+## Índice
+
+- [Cómo leer este manual](#cómo-leer-este-manual)
+- [Mapa de archivos](#mapa-de-archivos)
+- [0. Variables](#0-variables)
+- [1. IP fija](#1-ip-fija)
+- [2. Instalar BIND9](#2-instalar-bind9)
+- [3. Opciones generales de BIND](#3-opciones-generales-de-bind)
+- [4. Crear la zona](#4-crear-la-zona)
+- [5. Comprobar en el servidor](#5-comprobar-en-el-servidor)
+- [6. Cortafuegos](#6-cortafuegos)
+- [7. Acceso desde otro equipo](#7-acceso-desde-otro-equipo)
+- [8. Operaciones habituales](#8-operaciones-habituales)
+  - [Cómo funciona (leer primero)](#cómo-funciona-leer-primero)
+  - [8.0 Aplicar los cambios (siempre al final)](#80-aplicar-los-cambios-siempre-al-final)
+  - [8.1 Añadir un dominio](#81-añadir-un-dominio)
+  - [8.2 Consultar los dominios](#82-consultar-los-dominios)
+  - [8.3 Cambiar la IP o el nombre de un dominio](#83-cambiar-la-ip-o-el-nombre-de-un-dominio)
+  - [8.4 Eliminar un dominio](#84-eliminar-un-dominio)
+  - [8.5 Copia de seguridad y vuelta atrás](#85-copia-de-seguridad-y-vuelta-atrás)
+  - [8.6 Varias zonas (grupos con dominio raíz distinto)](#86-varias-zonas-grupos-con-dominio-raíz-distinto)
+- [9. Web de prueba con Nginx (opcional)](#9-web-de-prueba-con-nginx-opcional)
+- [10. Problemas típicos](#10-problemas-típicos)
+- [11. Deshacer (opcional)](#11-deshacer-opcional)
+
 ## Cómo leer este manual
 
 Cada apartado tiene siempre la misma forma:
