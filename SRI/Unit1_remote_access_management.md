@@ -1,5 +1,28 @@
 # Unidad 1
 
+## Índice
+
+- [Remote Access Management](#remote-access-management)
+- [1. Instalar SSH en el servidor](#1-instalar-ssh-en-el-servidor)
+- [2. Red de la máquina virtual](#2-red-de-la-máquina-virtual)
+  - [Desde terminal](#desde-terminal)
+  - [Excepción en el firewall de Windows para poder hacer pings mutuos](#excepción-en-el-firewall-de-windows-para-poder-hacer-pings-mutuos)
+- [3. Cambiar el puerto de SSH (lo primero tras instalarlo)](#3-cambiar-el-puerto-de-ssh-lo-primero-tras-instalarlo)
+- [4. Probar la conexión](#4-probar-la-conexión)
+- [5. Claves (autenticación sin contraseña)](#5-claves-autenticación-sin-contraseña)
+- [6. Endurecer (opcional)](#6-endurecer-opcional)
+- [7. Configurar el servicio para autoarranque](#7-configurar-el-servicio-para-autoarranque)
+- [Argumentos habituales de ssh](#argumentos-habituales-de-ssh)
+  - [Conexión e identidad](#conexión-e-identidad)
+  - [Terminal y ejecución](#terminal-y-ejecución)
+  - [Túneles y reenvío](#túneles-y-reenvío)
+  - [Depuración y opciones](#depuración-y-opciones)
+- [Formas de conectarse por SSH](#formas-de-conectarse-por-ssh)
+  - [Según el usuario](#según-el-usuario)
+  - [Según la autenticación](#según-la-autenticación)
+  - [Según cómo se lanza](#según-cómo-se-lanza)
+  - [Otros clientes](#otros-clientes)
+
 ## Remote Access Management
 
 > **Cómo leer este manual:** los bloques `bash` se ejecutan en el **servidor** (Ubuntu). Los bloques `powershell` se ejecutan en el **cliente** (Windows). Cada paso: comandos para copiar y, debajo, qué comprobar.
