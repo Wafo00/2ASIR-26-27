@@ -8,6 +8,36 @@
 >
 > En Ubuntu, `systemd-resolved` escucha solo en `127.0.0.53`; no entra en conflicto con BIND si este escucha en otras direcciones.
 
+## Índice
+
+- [Cómo se forman los nombres de dominio](#cómo-se-forman-los-nombres-de-dominio)
+- [Conceptos](#conceptos)
+- [1. Instalar](#1-instalar)
+- [2. Opciones generales y reenvío](#2-opciones-generales-y-reenvío)
+- [3. Declarar las zonas](#3-declarar-las-zonas)
+- [4. Crear los ficheros de zona](#4-crear-los-ficheros-de-zona)
+- [5. Validar](#5-validar)
+- [6. Arrancar y comprobar](#6-arrancar-y-comprobar)
+- [7. Pruebas](#7-pruebas)
+  - [Probar desde un cliente](#probar-desde-un-cliente)
+- [8. Configurar los clientes](#8-configurar-los-clientes)
+- [9. Firewall (opcional)](#9-firewall-opcional)
+- [10. Zona con un nombre por servicio y webs de prueba](#10-zona-con-un-nombre-por-servicio-y-webs-de-prueba)
+  - [10.1 Crear la zona](#101-crear-la-zona)
+  - [10.2 Webs de prueba con Nginx (opcional)](#102-webs-de-prueba-con-nginx-opcional)
+  - [10.3 Demostrar que cada servicio tiene su nombre](#103-demostrar-que-cada-servicio-tiene-su-nombre)
+- [11. Servidor secundario (esclavo) y transferencia de zonas](#11-servidor-secundario-esclavo-y-transferencia-de-zonas)
+  - [11.1 En el primario](#111-en-el-primario)
+  - [11.2 En la máquina del secundario](#112-en-la-máquina-del-secundario)
+  - [11.3 Comprobar la transferencia](#113-comprobar-la-transferencia)
+  - [11.4 Probar la redundancia](#114-probar-la-redundancia)
+  - [11.5 Que los clientes usen los dos servidores](#115-que-los-clientes-usen-los-dos-servidores)
+  - [11.6 Hacer un cambio con el secundario montado](#116-hacer-un-cambio-con-el-secundario-montado)
+  - [11.7 Añadir una zona nueva a un secundario que ya funciona](#117-añadir-una-zona-nueva-a-un-secundario-que-ya-funciona)
+- [Operaciones habituales](#operaciones-habituales)
+  - [Cambiar la IP o la red del servidor](#cambiar-la-ip-o-la-red-del-servidor)
+  - [Recuperar named tras un allow-transfer duplicado](#recuperar-named-tras-un-allow-transfer-duplicado)
+
 ## Cómo se forman los nombres de dominio
 
 Un nombre de dominio se lee **de derecha a izquierda**, de lo más general a lo más concreto. Cada tramo separado por puntos es una *etiqueta* y cada etiqueta es un *nivel*:
