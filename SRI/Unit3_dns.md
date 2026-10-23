@@ -373,112 +373,101 @@ sudo ufw status verbose
 
 ## 10. Zona con un nombre por servicio y webs de prueba
 
-Una misma máquina puede dar varios servicios. Para saber **qué es cada cosa**, cada servicio tiene su propio nombre: `dns` para el servidor DNS y `www.<alumno>` para la web de cada alumno. En este apartado se crea una zona nueva (`asir2.test`) con esos nombres y se montan dos webs de prueba que responden a ellos.
+Una misma máquina puede dar varios servicios. Para saber **qué es cada cosa**, cada servicio tiene su propio nombre, que sigue la jerarquía de la red: `servicio . alumno . módulo . centro . local`. Aquí se crea la zona `jordi.asir2.iespoveda.local` con los nombres de los servicios de la máquina.
 
 | Nombre | Qué es | Apunta a |
 |---|---|---|
-| `dns.asir2.test` | Servidor DNS de la zona | `172.16.6.20` |
-| `www.testjordi1.asir2.test` | Web 1 (puerto 80) | `172.16.6.20` |
-| `www.testjordi2.asir2.test` | Web 2 (puerto 8080) | `172.16.6.20` |
+| `dns.jordi.asir2.iespoveda.local` | Servidor DNS de la zona | `172.16.6.20` |
+| `www.jordi.asir2.iespoveda.local` | Web | `172.16.6.20` |
+| `dhcp.jordi.asir2.iespoveda.local` | Servidor DHCP (Kea) | `172.16.6.20` |
+
+Para otro servicio (`ftp`, `mail`...) basta una línea `A` más en la zona.
+
+> `.local` está reservado para mDNS: algunos clientes (Linux con `avahi`, macOS) no preguntan al DNS por nombres `.local`. Si un cliente no resuelve, probar con `dig @172.16.6.20 <nombre>`, que sí consulta al servidor.
 
 ### 10.1 Crear la zona
 
 Declarar la zona **debajo** de las existentes (la primera línea evita duplicarla si se ejecuta dos veces) y crear el fichero con los nombres:
 
 ```
-grep -q 'zone "asir2.test"' /etc/bind/named.conf.local || sudo tee -a /etc/bind/named.conf.local > /dev/null << 'EOF'
+grep -q 'zone "jordi.asir2.iespoveda.local"' /etc/bind/named.conf.local || sudo tee -a /etc/bind/named.conf.local > /dev/null << 'EOF'
 
-zone "asir2.test" {
+zone "jordi.asir2.iespoveda.local" {
     type primary;
-    file "/etc/bind/zones/db.asir2.test";
+    file "/etc/bind/zones/db.jordi.asir2.iespoveda.local";
 };
 EOF
 
-sudo tee /etc/bind/zones/db.asir2.test > /dev/null << 'EOF'
+sudo tee /etc/bind/zones/db.jordi.asir2.iespoveda.local > /dev/null << 'EOF'
 $TTL 300
-@                IN  SOA dns.asir2.test. admin.asir2.test. (
-                     2026102301 604800 86400 2419200 604800 )
-@                IN  NS  dns.asir2.test.
-dns              IN  A   172.16.6.20
-testjordi1       IN  A   172.16.6.20
-testjordi2       IN  A   172.16.6.20
-www.testjordi1   IN  A   172.16.6.20
-www.testjordi2   IN  A   172.16.6.20
+@      IN  SOA dns.jordi.asir2.iespoveda.local. admin.jordi.asir2.iespoveda.local. (
+              2026102301 604800 86400 2419200 604800 )
+@      IN  NS  dns.jordi.asir2.iespoveda.local.
+dns    IN  A   172.16.6.20
+www    IN  A   172.16.6.20
+dhcp   IN  A   172.16.6.20
 EOF
 
-sudo named-checkconf && sudo named-checkzone asir2.test /etc/bind/zones/db.asir2.test
+sudo named-checkconf && sudo named-checkzone jordi.asir2.iespoveda.local /etc/bind/zones/db.jordi.asir2.iespoveda.local
 sudo rndc reload
 ```
 
-Cada línea `nombre IN A ip` es un dominio. Para añadir otro: una línea nueva, **subir el serial**, validar y `sudo rndc reload`. El nombre `www.testjordi1` se escribe sin el sufijo de la zona: BIND le añade `.asir2.test`.
+Cada línea `nombre IN A ip` es un dominio. Los nombres se escriben **sin** el sufijo de la zona: BIND le añade `.jordi.asir2.iespoveda.local`. Para añadir otro: una línea nueva, **subir el serial**, validar y `sudo rndc reload`.
 
 Comprobar:
 
 ```
-dig @172.16.6.20 dns.asir2.test +short
-dig @172.16.6.20 www.testjordi1.asir2.test +short
-dig @172.16.6.20 asir2.test NS +short
+dig @172.16.6.20 dns.jordi.asir2.iespoveda.local +short
+dig @172.16.6.20 www.jordi.asir2.iespoveda.local +short
+dig @172.16.6.20 jordi.asir2.iespoveda.local NS +short
 ```
 
-✅ Debe salir `172.16.6.20`, `172.16.6.20` y `dns.asir2.test.`.
+✅ Debe salir `172.16.6.20`, `172.16.6.20` y `dns.jordi.asir2.iespoveda.local.`.
 
-### 10.2 Webs de prueba con Nginx (opcional)
+### 10.2 Web de prueba con Nginx (opcional)
 
-Dos webs en el mismo servidor. El DNS no conoce puertos: las dos se distinguen por nombre y por puerto.
+El DNS no conoce puertos: una web se distingue por su nombre y su puerto.
 
 ```
 sudo apt install -y nginx
-sudo mkdir -p /var/www/dominioa /var/www/dominiob
-echo '<h1>www.testjordi1 (puerto 80)</h1>' | sudo tee /var/www/dominioa/index.html > /dev/null
-echo '<h1>www.testjordi2 (puerto 8080)</h1>' | sudo tee /var/www/dominiob/index.html > /dev/null
+sudo mkdir -p /var/www/dominioa
+echo '<h1>www.jordi.asir2.iespoveda.local</h1>' | sudo tee /var/www/dominioa/index.html > /dev/null
 
 sudo tee /etc/nginx/sites-available/dominioa > /dev/null << 'EOF'
 server {
     listen 80;
-    server_name testjordi1.asir2.test www.testjordi1.asir2.test;
+    server_name www.jordi.asir2.iespoveda.local;
     root /var/www/dominioa;
     index index.html;
 }
 EOF
 
-sudo tee /etc/nginx/sites-available/dominiob > /dev/null << 'EOF'
-server {
-    listen 8080;
-    server_name testjordi2.asir2.test www.testjordi2.asir2.test;
-    root /var/www/dominiob;
-    index index.html;
-}
-EOF
-
 sudo ln -sf /etc/nginx/sites-available/dominioa /etc/nginx/sites-enabled/dominioa
-sudo ln -sf /etc/nginx/sites-available/dominiob /etc/nginx/sites-enabled/dominiob
 sudo rm -f /etc/nginx/sites-enabled/default
 sudo nginx -t && sudo systemctl reload nginx
 ```
 
-Si `ufw` está activo, abrir los puertos: `sudo ufw allow 80/tcp` y `sudo ufw allow 8080/tcp`.
+Si `ufw` está activo, abrir el puerto: `sudo ufw allow 80/tcp`. Para una segunda web, otro `server` con `listen 8080;` y su propio directorio.
 
 ### 10.3 Demostrar que cada servicio tiene su nombre
 
 En el servidor (sin depender de su DNS del sistema):
 
 ```
-dig @172.16.6.20 asir2.test NS +short
-for n in dns testjordi1 testjordi2 www.testjordi1 www.testjordi2; do printf "%-28s %s\n" "$n.asir2.test" "$(dig @172.16.6.20 $n.asir2.test +short)"; done
-curl -sS -H "Host: www.testjordi1.asir2.test" http://172.16.6.20 | grep '<h1>'
-curl -sS -H "Host: www.testjordi2.asir2.test" http://172.16.6.20:8080 | grep '<h1>'
+dig @172.16.6.20 jordi.asir2.iespoveda.local NS +short
+for n in dns www dhcp; do printf "%-36s %s\n" "$n.jordi.asir2.iespoveda.local" "$(dig @172.16.6.20 $n.jordi.asir2.iespoveda.local +short)"; done
+curl -sS --resolve www.jordi.asir2.iespoveda.local:80:172.16.6.20 http://www.jordi.asir2.iespoveda.local | grep '<h1>'
 ```
 
-Debe salir `dns.asir2.test.` como servidor de la zona, los cinco nombres con `172.16.6.20` y los dos títulos de las webs.
+Debe salir `dns.jordi.asir2.iespoveda.local.` como servidor de la zona, los tres nombres con `172.16.6.20` y el título de la web.
 
 Desde un cliente Windows (PowerShell como administrador; `Ethernet` es el nombre del adaptador):
 
 ```powershell
 Set-DnsClientServerAddress -InterfaceAlias "Ethernet" -ServerAddresses 172.16.6.20
 Clear-DnsClientCache
-nslookup www.testjordi1.asir2.test
-Start-Process "http://www.testjordi1.asir2.test"
-Start-Process "http://www.testjordi2.asir2.test:8080"
+nslookup www.jordi.asir2.iespoveda.local
+Start-Process "http://www.jordi.asir2.iespoveda.local"
 ```
 
 Para devolver el DNS a su valor anterior:
@@ -501,7 +490,7 @@ Autorizar la transferencia solo al secundario (sin esto, BIND la permite a cualq
 sudo sed -i 's|type primary;|type primary;\n    allow-transfer { 172.16.6.30; };\n    also-notify { 172.16.6.30; };|' /etc/bind/named.conf.local
 ```
 
-Comprobar que no ha quedado duplicado. Debe devolver **una línea por zona**: `2` (directa e inversa) o `3` si ya se creó la zona `asir2.test` del apartado 10:
+Comprobar que no ha quedado duplicado. Debe devolver **una línea por zona**: `2` (directa e inversa) o `3` si ya se creó la zona `jordi.asir2.iespoveda.local` del apartado 10:
 
 ```
 grep -c 'allow-transfer' /etc/bind/named.conf.local
@@ -558,7 +547,7 @@ options {
 EOF
 ```
 
-Declarar las zonas como secundarias (la tercera, `asir2.test`, solo si se creó en el apartado 10):
+Declarar las zonas como secundarias (la tercera, `jordi.asir2.iespoveda.local`, solo si se creó en el apartado 10):
 
 ```
 sudo cp /etc/bind/named.conf.local /etc/bind/named.conf.local.bak
@@ -576,10 +565,10 @@ zone "6.16.172.in-addr.arpa" {
     file "/var/cache/bind/db.172.16.6";
 };
 
-zone "asir2.test" {
+zone "jordi.asir2.iespoveda.local" {
     type secondary;
     primaries { 172.16.6.20; };
-    file "/var/cache/bind/db.asir2.test";
+    file "/var/cache/bind/db.jordi.asir2.iespoveda.local";
 };
 EOF
 sudo named-checkconf
@@ -600,8 +589,8 @@ journalctl -u named -e --no-pager | grep -i -E "transfer|loaded serial"
 ls -l /var/cache/bind/
 dig @172.16.6.30 ASIR2.local SOA +short
 dig @172.16.6.20 ASIR2.local SOA +short
-dig @172.16.6.30 asir2.test SOA +short
-dig @172.16.6.20 asir2.test SOA +short
+dig @172.16.6.30 jordi.asir2.iespoveda.local SOA +short
+dig @172.16.6.20 jordi.asir2.iespoveda.local SOA +short
 ```
 
 En el log debe aparecer `Transfer status: success`, en `ls` los ficheros de zona (uno por zona), y los dos `SOA` deben dar **el mismo serial**. Probar que el secundario responde con autoridad:
@@ -665,43 +654,43 @@ Editar solo el primario, **subir el serial** en el fichero cambiado, validar y `
 
 ### 11.7 Añadir una zona nueva a un secundario que ya funciona
 
-Caso habitual: el secundario ya está montado y se crea después una zona nueva en el primario (por ejemplo `asir2.test`, apartado 10). Solo hay que autorizarla en el primario y declararla en el secundario. **No se repite el `sed` del apartado 11.1**, porque duplicaría las líneas de las otras zonas.
+Caso habitual: el secundario ya está montado y se crea después una zona nueva en el primario (por ejemplo `jordi.asir2.iespoveda.local`, apartado 10). Solo hay que autorizarla en el primario y declararla en el secundario. **No se repite el `sed` del apartado 11.1**, porque duplicaría las líneas de las otras zonas.
 
 **En el primario.** Autorizar al secundario solo en la zona nueva (la primera línea evita hacerlo dos veces):
 
 ```
 sudo cp /etc/bind/named.conf.local /etc/bind/named.conf.local.bak2
-grep -A4 'zone "asir2.test"' /etc/bind/named.conf.local | grep -q allow-transfer || sudo sed -i '/zone "asir2.test"/,/};/ s|type primary;|type primary;\n    allow-transfer { 172.16.6.30; };\n    also-notify { 172.16.6.30; };|' /etc/bind/named.conf.local
+grep -A4 'zone "jordi.asir2.iespoveda.local"' /etc/bind/named.conf.local | grep -q allow-transfer || sudo sed -i '/zone "jordi.asir2.iespoveda.local"/,/};/ s|type primary;|type primary;\n    allow-transfer { 172.16.6.30; };\n    also-notify { 172.16.6.30; };|' /etc/bind/named.conf.local
 grep -c 'allow-transfer' /etc/bind/named.conf.local
 sudo named-checkconf && sudo rndc reload
 ```
 
-✅ El recuento debe dar una línea por zona (`3` con directa, inversa y `asir2.test`).
+✅ El recuento debe dar una línea por zona (`3` con directa, inversa y `jordi.asir2.iespoveda.local`).
 
 **En el secundario.** Declarar la zona nueva (la primera línea evita duplicarla) y pedir la transferencia:
 
 ```
-grep -q 'zone "asir2.test"' /etc/bind/named.conf.local || sudo tee -a /etc/bind/named.conf.local > /dev/null << 'EOF'
+grep -q 'zone "jordi.asir2.iespoveda.local"' /etc/bind/named.conf.local || sudo tee -a /etc/bind/named.conf.local > /dev/null << 'EOF'
 
-zone "asir2.test" {
+zone "jordi.asir2.iespoveda.local" {
     type secondary;
     primaries { 172.16.6.20; };
-    file "/var/cache/bind/db.asir2.test";
+    file "/var/cache/bind/db.jordi.asir2.iespoveda.local";
 };
 EOF
 
 sudo named-checkconf && sudo rndc reconfig
 sleep 3
-sudo rndc retransfer asir2.test
+sudo rndc retransfer jordi.asir2.iespoveda.local
 ```
 
 Comprobar:
 
 ```
-journalctl -u named --since "2 min ago" --no-pager | grep -i -E "asir2.test.*(transfer|loaded)"
-dig @172.16.6.30 asir2.test SOA +short
-dig @172.16.6.20 asir2.test SOA +short
-dig @172.16.6.30 www.testjordi1.asir2.test +short
+journalctl -u named --since "2 min ago" --no-pager | grep -i -E "jordi.asir2.iespoveda.local.*(transfer|loaded)"
+dig @172.16.6.30 jordi.asir2.iespoveda.local SOA +short
+dig @172.16.6.20 jordi.asir2.iespoveda.local SOA +short
+dig @172.16.6.30 www.jordi.asir2.iespoveda.local +short
 ```
 
 ✅ En el log, `Transfer status: success`; los dos `SOA` con el **mismo serial**; y la última consulta devuelve `172.16.6.20`.

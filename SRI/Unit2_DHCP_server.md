@@ -11,6 +11,7 @@
   - [4. Arrancar y comprobar](#4-arrancar-y-comprobar)
   - [5. Configurar para autoarranque](#5-configurar-para-autoarranque)
   - [6. Verificar desde un cliente](#6-verificar-desde-un-cliente)
+  - [7. Servidor secundario con alta disponibilidad (hot-standby)](#7-servidor-secundario-con-alta-disponibilidad-hot-standby)
   - [Operaciones habituales](#operaciones-habituales)
 - [Instalación y configuración de DHCP en Windows Server 2022](#instalación-y-configuración-de-dhcp-en-windows-server-2022)
   - [1. Configurar IP estática](#1-configurar-ip-estática)
@@ -207,6 +208,232 @@ ipconfig /renew
 
 Si repite la misma IP, es comportamiento normal (*sticky lease*: mientras no caduque y la MAC coincida, el servidor intenta devolver la misma).
 
+## 7. Servidor secundario con alta disponibilidad (hot-standby)
+
+Un segundo servidor Kea que **sincroniza las concesiones** con el primero y, si este cae, reparte IPs en su lugar. En modo *hot-standby* solo uno atiende a los clientes y el otro espera.
+
+Valores de ejemplo (sustituir por los reales):
+
+| | Nombre | IP | Rol |
+|---|---|---|---|
+| Primario | `server` | `172.16.6.20` | Atiende a los clientes |
+| Secundario | `server2` | `172.16.6.23` | En espera |
+
+> **Antes de empezar.** Cada servidor debe tener **una sola IP** en la interfaz y el puerto `8001/tcp` abierto entre ellos. Con varias IPs (por ejemplo una de netplan, otra añadida y otra por DHCP), la conexión HA sale con una IP que el otro firewall no permite y los dos quedan en `partner-down`. Ver 7.1.
+
+### 7.1 IP única en el secundario
+
+Si el secundario tiene IPs de más, dejar solo la suya. Desde la consola de la MV (por SSH se corta la conexión). Ajustar el nombre de la interfaz y la IP:
+
+```bash
+sudo mkdir -p /root/netplan-old
+sudo mv /etc/netplan/*.yaml* /root/netplan-old/
+
+sudo tee /etc/netplan/02-red.yaml > /dev/null << 'EOF'
+network:
+  version: 2
+  renderer: NetworkManager
+  ethernets:
+    enp0s3:
+      dhcp4: false
+      addresses: [172.16.6.23/24]
+      routes:
+        - to: default
+          via: 172.16.6.1
+      nameservers:
+        addresses: [172.16.6.20, 172.16.6.23]
+EOF
+sudo chmod 600 /etc/netplan/02-red.yaml
+sudo netplan apply
+ip -4 a | grep inet
+```
+
+✅ Debe quedar **solo** una IP en la interfaz (`172.16.6.23/24`). No basta con `nmcli`: el perfil lo regenera netplan en cada arranque.
+
+Si la máquina es nueva, ponerle nombre: `sudo hostnamectl set-hostname server2`.
+
+### 7.2 Instalar Kea en el secundario
+
+```bash
+sudo apt update
+sudo apt install -y kea
+```
+
+### 7.3 Configuración HA (la misma en las dos máquinas)
+
+Sustituye a la configuración del apartado 2: añade los módulos de HA y la lista de servidores. Ejecutar en el **primario**:
+
+```bash
+sudo cp /etc/kea/kea-dhcp4.conf /etc/kea/kea-dhcp4.conf.bak
+sudo tee /etc/kea/kea-dhcp4.conf > /dev/null << 'EOF'
+{
+  "Dhcp4": {
+    "interfaces-config": { "interfaces": ["enp0s3"] },
+    "control-socket": { "socket-type": "unix", "socket-name": "/run/kea/kea4-ctrl-socket" },
+    "lease-database": { "type": "memfile", "lfc-interval": 3600 },
+    "multi-threading": { "enable-multi-threading": true },
+    "valid-lifetime": 600,
+    "max-valid-lifetime": 7200,
+    "hooks-libraries": [
+      { "library": "libdhcp_lease_cmds.so" },
+      {
+        "library": "libdhcp_ha.so",
+        "parameters": {
+          "high-availability": [ {
+            "this-server-name": "server",
+            "mode": "hot-standby",
+            "heartbeat-delay": 10000,
+            "max-response-delay": 60000,
+            "max-ack-delay": 5000,
+            "max-unacked-clients": 5,
+            "multi-threading": {
+              "enable-multi-threading": true,
+              "http-dedicated-listener": true,
+              "http-listener-threads": 4,
+              "http-client-threads": 4
+            },
+            "peers": [
+              { "name": "server",  "url": "http://172.16.6.20:8001/", "role": "primary" },
+              { "name": "server2", "url": "http://172.16.6.23:8001/", "role": "standby" }
+            ]
+          } ]
+        }
+      }
+    ],
+    "subnet4": [
+      {
+        "id": 1,
+        "subnet": "172.16.6.0/24",
+        "pools": [ { "pool": "172.16.6.200 - 172.16.6.250" } ],
+        "option-data": [
+          { "name": "routers", "data": "172.16.6.1" },
+          { "name": "domain-name-servers", "data": "172.16.6.20, 172.16.6.23" }
+        ]
+      }
+    ]
+  }
+}
+EOF
+```
+
+En el **secundario**, el mismo bloque con una única diferencia: `this-server-name` es `server2`:
+
+```bash
+sudo cp /etc/kea/kea-dhcp4.conf /etc/kea/kea-dhcp4.conf.orig
+sudo tee /etc/kea/kea-dhcp4.conf > /dev/null << 'EOF'
+{
+  "Dhcp4": {
+    "interfaces-config": { "interfaces": ["enp0s3"] },
+    "control-socket": { "socket-type": "unix", "socket-name": "/run/kea/kea4-ctrl-socket" },
+    "lease-database": { "type": "memfile", "lfc-interval": 3600 },
+    "multi-threading": { "enable-multi-threading": true },
+    "valid-lifetime": 600,
+    "max-valid-lifetime": 7200,
+    "hooks-libraries": [
+      { "library": "libdhcp_lease_cmds.so" },
+      {
+        "library": "libdhcp_ha.so",
+        "parameters": {
+          "high-availability": [ {
+            "this-server-name": "server2",
+            "mode": "hot-standby",
+            "heartbeat-delay": 10000,
+            "max-response-delay": 60000,
+            "max-ack-delay": 5000,
+            "max-unacked-clients": 5,
+            "multi-threading": {
+              "enable-multi-threading": true,
+              "http-dedicated-listener": true,
+              "http-listener-threads": 4,
+              "http-client-threads": 4
+            },
+            "peers": [
+              { "name": "server",  "url": "http://172.16.6.20:8001/", "role": "primary" },
+              { "name": "server2", "url": "http://172.16.6.23:8001/", "role": "standby" }
+            ]
+          } ]
+        }
+      }
+    ],
+    "subnet4": [
+      {
+        "id": 1,
+        "subnet": "172.16.6.0/24",
+        "pools": [ { "pool": "172.16.6.200 - 172.16.6.250" } ],
+        "option-data": [
+          { "name": "routers", "data": "172.16.6.1" },
+          { "name": "domain-name-servers", "data": "172.16.6.20, 172.16.6.23" }
+        ]
+      }
+    ]
+  }
+}
+EOF
+grep this-server-name /etc/kea/kea-dhcp4.conf
+```
+
+✅ Debe salir `"this-server-name": "server2"`.
+
+- **`mode: hot-standby`:** el primario reparte y el secundario solo recibe copia de las concesiones.
+- **`url` y `role`:** dónde escucha cada servidor y qué papel tiene. Todo lo demás es idéntico en los dos.
+- **`domain-name-servers`:** los clientes reciben los dos DNS (primario y secundario).
+- **Puerto `8001`:** el que usan los dos Kea para hablar entre sí. No es el del DHCP.
+
+### 7.4 Firewall
+
+Solo si `ufw` está activo. En el **primario**, permitir al secundario:
+
+```bash
+sudo ufw allow from 172.16.6.23 to any port 8001 proto tcp
+```
+
+En el **secundario**, permitir al primario:
+
+```bash
+sudo ufw allow from 172.16.6.20 to any port 8001 proto tcp
+```
+
+Y, si hay `ufw`, que el DHCP entre: `sudo ufw allow 67/udp`.
+
+### 7.5 Validar y arrancar en las dos máquinas
+
+```bash
+sudo kea-dhcp4 -t /etc/kea/kea-dhcp4.conf 2>&1 | grep -E 'ERROR|FATAL'
+sudo systemctl enable kea-dhcp4-server
+sudo systemctl restart kea-dhcp4-server
+```
+
+✅ La validación no debe imprimir ningún `ERROR`. Hay que usar **`restart`**, no solo `enable --now`: tras instalar, Kea ya arranca con la configuración por defecto y no la recarga solo.
+
+Si la validación da `Unable to open file`, es AppArmor (ver apartado 3).
+
+### 7.6 Comprobar que están sincronizados
+
+Esperar unos 15 segundos y, en **cada** máquina, preguntar al otro Kea por su estado:
+
+```bash
+curl -s -X POST -H "Content-Type: application/json" -d '{"command":"ha-heartbeat","service":["dhcp4"]}' http://172.16.6.20:8001/
+curl -s -X POST -H "Content-Type: application/json" -d '{"command":"ha-heartbeat","service":["dhcp4"]}' http://172.16.6.23:8001/
+```
+
+✅ Los dos deben devolver `"state": "hot-standby"`. En el primario `"scopes": ["server"]` (reparte él) y en el secundario `"scopes": []` (en espera). `unsent-update-count` debe bajar a `0`.
+
+Comprobar que las concesiones llegan al secundario (tras pedir IP desde un cliente):
+
+```bash
+sudo cat /var/lib/kea/kea-leases4.csv
+```
+
+Debe aparecer la IP y la MAC del cliente en **las dos** máquinas.
+
+| Estado | Significado |
+|---|---|
+| `hot-standby` | Todo correcto y sincronizado |
+| `waiting` / `ready` (se queda así) | No ve al otro: revisar firewall, IPs y que el otro Kea esté en marcha |
+| `partner-down` | Este servidor considera caído al otro y reparte él |
+
+> **Cuándo hay relevo automático.** El secundario no toma el control solo porque el primario deje de contestar: espera a que más de `max-unacked-clients` (aquí 5) clientes se queden sin respuesta. Con pocos clientes de prueba no se verá el cambio, es el funcionamiento normal.
+
 ## Operaciones habituales
 ```bash
 nmcli -f ALL device show | grep -i dhcp_server_identifier
@@ -307,6 +534,7 @@ ip route | grep default
 | El cliente no recibe IP | VMs en redes distintas, o interfaz con IPs residuales |
 | El cliente recibe IP pero no tiene internet | `routers` no es la puerta de enlace real de la red (`ip route \| grep default`) |
 | Tras cambiar de red sigue repartiendo la antigua | Se usó `reload` en vez de `restart`, o falta cambiar la subred y el pool |  
+| Los dos Kea de HA no se ven (`waiting`/`ready` o `Connection timed out` en el puerto 8001) | Firewall sin el puerto `8001/tcp`, o un servidor con varias IPs (la conexión sale con una no autorizada) |
 
 # Instalación y configuración de DHCP en Windows Server 2022
 
