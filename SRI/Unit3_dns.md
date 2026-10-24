@@ -14,6 +14,7 @@
 - [Conceptos](#conceptos)
 - [1. Instalar](#1-instalar)
 - [2. Opciones generales y reenvío](#2-opciones-generales-y-reenvío)
+  - [Si las consultas externas dan SERVFAIL (la red no deja pasar DNSSEC)](#si-las-consultas-externas-dan-servfail-la-red-no-deja-pasar-dnssec)
 - [3. Declarar las zonas](#3-declarar-las-zonas)
 - [4. Crear los ficheros de zona](#4-crear-los-ficheros-de-zona)
 - [5. Validar](#5-validar)
@@ -133,9 +134,10 @@ options {
 
     // Lo que no sea de zonas propias se reenvía a Google
     forwarders { 8.8.8.8; 8.8.4.4; };
-    forward only;
+    forward first;
 
-    dnssec-validation auto;
+    // La red de clase no deja pasar DNSSEC (ver más abajo)
+    dnssec-validation no;
 };
 EOF
 ```
@@ -147,8 +149,40 @@ Sustituir `172.16.6.20` y `172.16.6.0/24` por la IP y la red del servidor.
 | `listen-on` | IPs del servidor donde atiende peticiones. Si la IP del servidor no figura aquí, no responde en ella. |
 | `allow-query` / `allow-recursion` | Limitan quién consulta y quién puede pedir resolución externa. Sin límite, el servidor sería un *resolver abierto* (abusable desde internet). |
 | `forwarders` | Servidores a los que se reenvía lo que no es de zonas propias. |
-| `forward only` | Solo usa los forwarders. Con `forward first`, si fallan, intentaría resolver por su cuenta. |
-| `dnssec-validation auto` | Valida firmas DNSSEC de las respuestas externas. |
+| `forward first` | Usa los forwarders y, si fallan, intenta resolver por su cuenta. Con `forward only` solo usaría los forwarders. |
+| `dnssec-validation` | `auto` valida las firmas DNSSEC de las respuestas externas; `no` no las valida. Aquí va en `no` porque la red de clase no deja pasar las firmas (ver abajo). |
+
+### Si las consultas externas dan `SERVFAIL` (la red no deja pasar DNSSEC)
+
+> **Caso real.** Con `dnssec-validation auto`, el servidor resolvía los nombres propios pero **fallaban todas las consultas externas** (`google.com`, etc.) con `SERVFAIL`, aunque había internet. Desde un equipo con el DNS del servidor no se podía navegar.
+
+**Causa.** Para validar DNSSEC hacen falta los registros de firma (`RRSIG`). La red de clase intercepta el DNS saliente (el router `172.16.6.1` responde él mismo, incluso a `8.8.8.8`, `1.1.1.1` o `9.9.9.9`) y no devuelve esas firmas. Sin ellas, la cadena de confianza no se puede completar y BIND devuelve `SERVFAIL`. Los equipos normales no validan, por eso no lo notan.
+
+**Cómo comprobarlo.** Si con `+cd` (sin validar) responde bien y sin él falla, es esto:
+
+```
+dig @172.16.6.20 google.com A | grep -E 'status|ANSWER:'
+dig @172.16.6.20 google.com A +cd | grep -E 'status|ANSWER:'
+```
+
+Y para confirmar que faltan las firmas (en una respuesta sana aparece el `RRSIG` y el flag `ad`):
+
+```
+dig @8.8.8.8 com DS +dnssec | grep -E 'flags|RRSIG'
+```
+
+**Solución.** Desactivar la validación (es lo que se hace cuando la red no soporta DNSSEC). Se aplica en el primario y en el secundario:
+
+```
+sudo cp /etc/bind/named.conf.options /etc/bind/named.conf.options.bak
+sudo sed -i 's/dnssec-validation auto;/dnssec-validation no;/' /etc/bind/named.conf.options
+sudo named-checkconf && sudo rndc reload && sudo rndc flush
+dig @172.16.6.20 google.com A | grep -E 'status|ANSWER:'
+```
+
+✅ Debe salir `NOERROR` y `ANSWER` mayor que 0.
+
+> **Qué se pierde.** Solo la comprobación de firmas de las respuestas externas. En una red que sí deja pasar DNSSEC, volver a `dnssec-validation auto;` y repetir el `sed` al revés.
 
 ## 3. Declarar las zonas
 
@@ -540,9 +574,10 @@ options {
     allow-recursion { localhost; 172.16.6.0/24; };
 
     forwarders { 8.8.8.8; 8.8.4.4; };
-    forward only;
+    forward first;
 
-    dnssec-validation auto;
+    // La red de clase no deja pasar DNSSEC (ver más abajo)
+    dnssec-validation no;
 };
 EOF
 ```
@@ -788,7 +823,7 @@ Solo deben quedar copias `.bak`. Se ejecuta sin `2>/dev/null`: ocultaría los er
 | Síntoma | Causa probable |
 |---|---|
 | `NXDOMAIN` para un equipo | Registro ausente, falta el punto final en un FQDN, o no se subió el serial / no se recargó. |
-| `SERVFAIL` en dominios externos | Forwarders inalcanzables (sin salida a internet o firewall). |
+| `SERVFAIL` en dominios externos | Forwarders inalcanzables (sin salida a internet o firewall), o la red no deja pasar DNSSEC: probar con `dig ... +cd` (ver apartado 2). |
 | `REFUSED` | El cliente está fuera de `allow-query` / `allow-recursion`. |
 | Timeout sin respuesta | Firewall (`sudo ufw allow 53`), o la IP del servidor no está en `listen-on`. Comprobar con `ip -4 a` y `sudo ss -tulpn \| grep named`. También si el cliente está en otra red distinta a la del servidor. |
 | Timeout tras cambiar la IP del servidor | `listen-on` y las zonas siguen con la IP o red antigua (ver "Cambiar la IP o la red del servidor"). |
