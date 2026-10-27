@@ -96,54 +96,60 @@ Guía de referencia rápida, organizada **por tareas**: busca primero *qué quie
   - [8.11 Extraer los ficheros de un paquete sin instalarlo](#811-extraer-los-ficheros-de-un-paquete-sin-instalarlo)
 - **[9. Red](#9-red)**
   - [9.1 Ver IPs e interfaces de red](#91-ver-ips-e-interfaces-de-red)
-  - [9.2 Ver IPs de forma compacta (una línea por interfaz)](#92-ver-ips-de-forma-compacta-una-línea-por-interfaz)
-  - [9.3 Ver la tabla de rutas](#93-ver-la-tabla-de-rutas)
-  - [9.4 Ver estadísticas de una interfaz](#94-ver-estadísticas-de-una-interfaz)
-  - [9.5 Borrar las IPs de una interfaz](#95-borrar-las-ips-de-una-interfaz)
-  - [9.6 Apagar o encender una interfaz](#96-apagar-o-encender-una-interfaz)
-  - [9.7 Cambiar la MAC temporalmente](#97-cambiar-la-mac-temporalmente)
-  - [9.8 Aplicar la configuración de red (netplan)](#98-aplicar-la-configuración-de-red-netplan)
-  - [9.9 Localizar el fichero de red de netplan](#99-localizar-el-fichero-de-red-de-netplan)
-  - [9.10 Aplicar netplan con vuelta atrás automática](#910-aplicar-netplan-con-vuelta-atrás-automática)
-  - [9.11 Elegir por qué interfaz sale a internet (dos tarjetas)](#911-elegir-por-qué-interfaz-sale-a-internet-dos-tarjetas)
-  - [9.12 Ver las conexiones de NetworkManager](#912-ver-las-conexiones-de-networkmanager)
-  - [9.13 Poner IP fija y DNS desde la línea de comandos](#913-poner-ip-fija-y-dns-desde-la-línea-de-comandos)
-  - [9.14 Renovar IP con NetworkManager](#914-renovar-ip-con-networkmanager)
-  - [9.15 Saber qué servidor DHCP concedió la IP](#915-saber-qué-servidor-dhcp-concedió-la-ip)
-  - [9.16 Liberar y pedir IP manualmente (dhclient)](#916-liberar-y-pedir-ip-manualmente-dhclient)
-  - [9.17 Ver el intercambio DHCP en vivo](#917-ver-el-intercambio-dhcp-en-vivo)
-  - [9.18 Ver qué proceso escucha en un puerto](#918-ver-qué-proceso-escucha-en-un-puerto)
-  - [9.19 Probar una web desde la terminal](#919-probar-una-web-desde-la-terminal)
-  - [9.20 Cambiar el nombre de la máquina](#920-cambiar-el-nombre-de-la-máquina)
-  - [9.21 Ver qué DNS usa el cliente](#921-ver-qué-dns-usa-el-cliente)
-  - [9.22 Buscar rastros de una IP antigua en la configuración](#922-buscar-rastros-de-una-ip-antigua-en-la-configuración)
-  - [9.23 Convertir el servidor en router/NAT (sin probar)](#923-convertir-el-servidor-en-routernat-sin-probar)
-  - [9.24 Ver si el firewall está activo](#924-ver-si-el-firewall-está-activo)
-  - [9.25 Abrir un puerto en el firewall](#925-abrir-un-puerto-en-el-firewall)
-  - [9.26 Activar el firewall sin perder SSH (sin probar)](#926-activar-el-firewall-sin-perder-ssh-sin-probar)
+  - [9.2 Comprobar si un equipo responde en la red](#92-comprobar-si-un-equipo-responde-en-la-red)
+  - [9.3 Ver el nombre de la máquina](#93-ver-el-nombre-de-la-máquina)
+  - [9.4 Ver IPs de forma compacta (una línea por interfaz)](#94-ver-ips-de-forma-compacta-una-línea-por-interfaz)
+  - [9.5 Ver la tabla de rutas](#95-ver-la-tabla-de-rutas)
+  - [9.6 Ver estadísticas de una interfaz](#96-ver-estadísticas-de-una-interfaz)
+  - [9.7 Borrar las IPs de una interfaz](#97-borrar-las-ips-de-una-interfaz)
+  - [9.8 Apagar o encender una interfaz](#98-apagar-o-encender-una-interfaz)
+  - [9.9 Cambiar la MAC temporalmente](#99-cambiar-la-mac-temporalmente)
+  - [9.10 Aplicar la configuración de red (netplan)](#910-aplicar-la-configuración-de-red-netplan)
+  - [9.11 Localizar el fichero de red de netplan](#911-localizar-el-fichero-de-red-de-netplan)
+  - [9.12 Aplicar netplan con vuelta atrás automática](#912-aplicar-netplan-con-vuelta-atrás-automática)
+  - [9.13 Elegir por qué interfaz sale a internet (dos tarjetas)](#913-elegir-por-qué-interfaz-sale-a-internet-dos-tarjetas)
+  - [9.14 Ver las conexiones de NetworkManager](#914-ver-las-conexiones-de-networkmanager)
+  - [9.15 Poner IP fija y DNS desde la línea de comandos](#915-poner-ip-fija-y-dns-desde-la-línea-de-comandos)
+  - [9.16 Renovar IP con NetworkManager](#916-renovar-ip-con-networkmanager)
+  - [9.17 Saber qué servidor DHCP concedió la IP](#917-saber-qué-servidor-dhcp-concedió-la-ip)
+  - [9.18 Liberar y pedir IP manualmente (dhclient)](#918-liberar-y-pedir-ip-manualmente-dhclient)
+  - [9.19 Ver el intercambio DHCP en vivo](#919-ver-el-intercambio-dhcp-en-vivo)
+  - [9.20 Ver qué proceso escucha en un puerto](#920-ver-qué-proceso-escucha-en-un-puerto)
+  - [9.21 Probar una web desde la terminal](#921-probar-una-web-desde-la-terminal)
+  - [9.22 Cambiar el nombre de la máquina](#922-cambiar-el-nombre-de-la-máquina)
+  - [9.23 Ver qué DNS usa el cliente](#923-ver-qué-dns-usa-el-cliente)
+  - [9.24 Buscar rastros de una IP antigua en la configuración](#924-buscar-rastros-de-una-ip-antigua-en-la-configuración)
+  - [9.25 Convertir el servidor en router/NAT (sin probar)](#925-convertir-el-servidor-en-routernat-sin-probar)
+  - [9.26 Ver si el firewall está activo](#926-ver-si-el-firewall-está-activo)
+  - [9.27 Abrir un puerto en el firewall](#927-abrir-un-puerto-en-el-firewall)
+  - [9.28 Activar el firewall sin perder SSH (sin probar)](#928-activar-el-firewall-sin-perder-ssh-sin-probar)
 - **[10. SSH y acceso remoto](#10-ssh-y-acceso-remoto)**
   - [10.1 Instalar el servidor SSH y arrancarlo](#101-instalar-el-servidor-ssh-y-arrancarlo)
-  - [10.2 Comprobar que SSH escucha en el puerto 22](#102-comprobar-que-ssh-escucha-en-el-puerto-22)
-  - [10.3 Generar un par de claves](#103-generar-un-par-de-claves)
-  - [10.4 Copiar la clave pública a un servidor](#104-copiar-la-clave-pública-a-un-servidor)
-  - [10.5 Conectar por SSH](#105-conectar-por-ssh)
-  - [10.6 Conectar a una MV con red NAT (reenvío de puertos)](#106-conectar-a-una-mv-con-red-nat-reenvío-de-puertos)
-  - [10.7 Copiar un fichero entre equipos (scp)](#107-copiar-un-fichero-entre-equipos-scp)
-  - [10.8 Ver la huella de las claves del servidor](#108-ver-la-huella-de-las-claves-del-servidor)
-  - [10.9 Ver las claves guardadas de un servidor (known_hosts)](#109-ver-las-claves-guardadas-de-un-servidor-known_hosts)
-  - [10.10 Borrar un servidor de known_hosts (aviso REMOTE HOST IDENTIFICATION HAS CHANGED)](#1010-borrar-un-servidor-de-known_hosts-aviso-remote-host-identification-has-changed)
-  - [10.11 Regenerar las claves SSH del servidor (MV clonada)](#1011-regenerar-las-claves-ssh-del-servidor-mv-clonada)
-  - [10.12 Añadir una clave pública a un servidor sin ssh-copy-id](#1012-añadir-una-clave-pública-a-un-servidor-sin-ssh-copy-id)
-  - [10.13 Conectar con una clave concreta](#1013-conectar-con-una-clave-concreta)
-  - [10.14 Autorizar una clave a otro usuario del servidor](#1014-autorizar-una-clave-a-otro-usuario-del-servidor)
-  - [10.15 Revocar una clave pública (acceso por clave)](#1015-revocar-una-clave-pública-acceso-por-clave)
-  - [10.16 Entrar y quedar directamente como root](#1016-entrar-y-quedar-directamente-como-root)
-  - [10.17 Pasar a root tras conectar](#1017-pasar-a-root-tras-conectar)
-  - [10.18 Configurar un alias de conexión](#1018-configurar-un-alias-de-conexión)
-  - [10.19 Depurar una conexión SSH](#1019-depurar-una-conexión-ssh)
-  - [10.20 Permisos que exige SSH para funcionar](#1020-permisos-que-exige-ssh-para-funcionar)
-  - [10.21 Ver la configuración efectiva del servidor SSH](#1021-ver-la-configuración-efectiva-del-servidor-ssh)
-  - [10.22 Editar sudoers de forma segura](#1022-editar-sudoers-de-forma-segura)
+  - [10.2 Saber si el servicio SSH funciona por socket (Ubuntu reciente)](#102-saber-si-el-servicio-ssh-funciona-por-socket-ubuntu-reciente)
+  - [10.3 Comprobar si SSH funciona (en este orden)](#103-comprobar-si-ssh-funciona-en-este-orden)
+  - [10.4 Saber si estoy en una sesión SSH o en la consola local](#104-saber-si-estoy-en-una-sesión-ssh-o-en-la-consola-local)
+  - [10.5 Cerrar una sesión SSH](#105-cerrar-una-sesión-ssh)
+  - [10.6 Comprobar que SSH escucha en el puerto 22](#106-comprobar-que-ssh-escucha-en-el-puerto-22)
+  - [10.7 Generar un par de claves](#107-generar-un-par-de-claves)
+  - [10.8 Copiar la clave pública a un servidor](#108-copiar-la-clave-pública-a-un-servidor)
+  - [10.9 Conectar por SSH](#109-conectar-por-ssh)
+  - [10.10 Conectar a una MV con red NAT (reenvío de puertos)](#1010-conectar-a-una-mv-con-red-nat-reenvío-de-puertos)
+  - [10.11 Copiar un fichero entre equipos (scp)](#1011-copiar-un-fichero-entre-equipos-scp)
+  - [10.12 Ver la huella de las claves del servidor](#1012-ver-la-huella-de-las-claves-del-servidor)
+  - [10.13 Ver las claves guardadas de un servidor (known_hosts)](#1013-ver-las-claves-guardadas-de-un-servidor-known_hosts)
+  - [10.14 Borrar un servidor de known_hosts (aviso REMOTE HOST IDENTIFICATION HAS CHANGED)](#1014-borrar-un-servidor-de-known_hosts-aviso-remote-host-identification-has-changed)
+  - [10.15 Regenerar las claves SSH del servidor (MV clonada)](#1015-regenerar-las-claves-ssh-del-servidor-mv-clonada)
+  - [10.16 Añadir una clave pública a un servidor sin ssh-copy-id](#1016-añadir-una-clave-pública-a-un-servidor-sin-ssh-copy-id)
+  - [10.17 Conectar con una clave concreta](#1017-conectar-con-una-clave-concreta)
+  - [10.18 Autorizar una clave a otro usuario del servidor](#1018-autorizar-una-clave-a-otro-usuario-del-servidor)
+  - [10.19 Revocar una clave pública (acceso por clave)](#1019-revocar-una-clave-pública-acceso-por-clave)
+  - [10.20 Entrar y quedar directamente como root](#1020-entrar-y-quedar-directamente-como-root)
+  - [10.21 Pasar a root tras conectar](#1021-pasar-a-root-tras-conectar)
+  - [10.22 Configurar un alias de conexión](#1022-configurar-un-alias-de-conexión)
+  - [10.23 Depurar una conexión SSH](#1023-depurar-una-conexión-ssh)
+  - [10.24 Permisos que exige SSH para funcionar](#1024-permisos-que-exige-ssh-para-funcionar)
+  - [10.25 Ver la configuración efectiva del servidor SSH](#1025-ver-la-configuración-efectiva-del-servidor-ssh)
+  - [10.26 Editar sudoers de forma segura](#1026-editar-sudoers-de-forma-segura)
 - **[11. DHCP (Kea)](#11-dhcp-kea)**
   - [11.1 Validar la configuración sin arrancar el servicio](#111-validar-la-configuración-sin-arrancar-el-servicio)
   - [11.2 Ver las concesiones de IP activas](#112-ver-las-concesiones-de-ip-activas)
@@ -781,7 +787,25 @@ apt-get download paquete
 ip a
 ```
 
-### 9.2 Ver IPs de forma compacta (una línea por interfaz)
+### 9.2 Comprobar si un equipo responde en la red
+
+```bash
+ping IP
+```
+
+- `-c N` — envía solo N paquetes y se detiene
+- `Ctrl+C` — detenerlo (muestra el resumen)
+- *que responda no implica que sus servicios funcionen (SSH, web...): solo que su red responde*
+
+### 9.3 Ver el nombre de la máquina
+
+```bash
+hostname
+```
+
+- `hostname -I` — solo sus IPs
+
+### 9.4 Ver IPs de forma compacta (una línea por interfaz)
 
 ```bash
 ip -br a
@@ -789,19 +813,19 @@ ip -br a
 
 - `ip -br link` — ver las MAC
 
-### 9.3 Ver la tabla de rutas
+### 9.5 Ver la tabla de rutas
 
 ```bash
 ip route
 ```
 
-### 9.4 Ver estadísticas de una interfaz
+### 9.6 Ver estadísticas de una interfaz
 
 ```bash
 ip -s -4 addr show iface
 ```
 
-### 9.5 Borrar las IPs de una interfaz
+### 9.7 Borrar las IPs de una interfaz
 
 ```bash
 sudo ip addr flush dev iface
@@ -809,13 +833,13 @@ sudo ip addr flush dev iface
 
 - `sudo ip addr del IP/24 dev iface` — borrar solo una IP concreta
 
-### 9.6 Apagar o encender una interfaz
+### 9.8 Apagar o encender una interfaz
 
 ```bash
 sudo ip link set iface down|up
 ```
 
-### 9.7 Cambiar la MAC temporalmente
+### 9.9 Cambiar la MAC temporalmente
 
 ```bash
 sudo ip link set iface address MAC
@@ -823,7 +847,7 @@ sudo ip link set iface address MAC
 
 - *el DHCP lo trata como un cliente nuevo*
 
-### 9.8 Aplicar la configuración de red (netplan)
+### 9.10 Aplicar la configuración de red (netplan)
 
 ```bash
 sudo netplan apply
@@ -832,13 +856,13 @@ sudo netplan apply
 - `--debug` — si falla, para ver el detalle
 - *YAML con espacios, nunca tabuladores*
 
-### 9.9 Localizar el fichero de red de netplan
+### 9.11 Localizar el fichero de red de netplan
 
 ```bash
 ls /etc/netplan/
 ```
 
-### 9.10 Aplicar netplan con vuelta atrás automática
+### 9.12 Aplicar netplan con vuelta atrás automática
 
 ```bash
 sudo netplan try
@@ -846,7 +870,7 @@ sudo netplan try
 
 - *si no confirmas, revierte solo a los 120 s: ideal al cambiar la IP por SSH*
 
-### 9.11 Elegir por qué interfaz sale a internet (dos tarjetas)
+### 9.13 Elegir por qué interfaz sale a internet (dos tarjetas)
 
 ```bash
 sudo nano /etc/netplan/fichero.yaml
@@ -855,13 +879,13 @@ sudo nano /etc/netplan/fichero.yaml
 - `dhcp4-overrides: route-metric: 50` — menor métrica = esa ruta por defecto gana
 - `optional: true` — evita esperas al arrancar si falta esa red
 
-### 9.12 Ver las conexiones de NetworkManager
+### 9.14 Ver las conexiones de NetworkManager
 
 ```bash
 nmcli connection show
 ```
 
-### 9.13 Poner IP fija y DNS desde la línea de comandos
+### 9.15 Poner IP fija y DNS desde la línea de comandos
 
 ```bash
 nmcli connection modify "conexión" ipv4.method manual ipv4.addresses IP/24 ipv4.dns IP_DNS ipv4.dns-search dominio ipv4.ignore-auto-dns yes
@@ -869,31 +893,31 @@ nmcli connection modify "conexión" ipv4.method manual ipv4.addresses IP/24 ipv4
 
 - `nmcli connection up "conexión"` — aplicar los cambios
 
-### 9.14 Renovar IP con NetworkManager
+### 9.16 Renovar IP con NetworkManager
 
 ```bash
 nmcli device disconnect iface && nmcli device connect iface
 ```
 
-### 9.15 Saber qué servidor DHCP concedió la IP
+### 9.17 Saber qué servidor DHCP concedió la IP
 
 ```bash
 nmcli -f ALL device show | grep -i dhcp_server_identifier
 ```
 
-### 9.16 Liberar y pedir IP manualmente (dhclient)
+### 9.18 Liberar y pedir IP manualmente (dhclient)
 
 ```bash
 sudo dhclient -r iface && sudo dhclient iface
 ```
 
-### 9.17 Ver el intercambio DHCP en vivo
+### 9.19 Ver el intercambio DHCP en vivo
 
 ```bash
 sudo tcpdump -i iface -n port 67 or port 68
 ```
 
-### 9.18 Ver qué proceso escucha en un puerto
+### 9.20 Ver qué proceso escucha en un puerto
 
 ```bash
 sudo ss -tulpn | grep ':puerto'
@@ -901,7 +925,7 @@ sudo ss -tulpn | grep ':puerto'
 
 - `sudo ss -tlnp | grep nginx` — en qué puertos escucha un servicio concreto
 
-### 9.19 Probar una web desde la terminal
+### 9.21 Probar una web desde la terminal
 
 ```bash
 curl http://ip:puerto
@@ -910,7 +934,7 @@ curl http://ip:puerto
 - `wget -qO- http://ip:puerto` — alternativa
 - `sudo apt install -y curl` — si curl no está instalado
 
-### 9.20 Cambiar el nombre de la máquina
+### 9.22 Cambiar el nombre de la máquina
 
 ```bash
 sudo hostnamectl set-hostname nombre
@@ -918,13 +942,13 @@ sudo hostnamectl set-hostname nombre
 
 - *actualizar también /etc/hosts*
 
-### 9.21 Ver qué DNS usa el cliente
+### 9.23 Ver qué DNS usa el cliente
 
 ```bash
 resolvectl status | grep -i 'dns server'
 ```
 
-### 9.22 Buscar rastros de una IP antigua en la configuración
+### 9.24 Buscar rastros de una IP antigua en la configuración
 
 ```bash
 sudo grep -rn "IP_antigua" /etc/carpeta
@@ -932,7 +956,7 @@ sudo grep -rn "IP_antigua" /etc/carpeta
 
 - *sin 2>/dev/null, que ocultaría errores*
 
-### 9.23 Convertir el servidor en router/NAT (sin probar)
+### 9.25 Convertir el servidor en router/NAT (sin probar)
 
 ```bash
 sudo sysctl -p
@@ -942,7 +966,7 @@ sudo sysctl -p
 - `sudo iptables -t nat -A POSTROUTING -o iface_internet -j MASQUERADE` — activar el NAT
 - `sudo netfilter-persistent save` — hacerlo permanente
 
-### 9.24 Ver si el firewall está activo
+### 9.26 Ver si el firewall está activo
 
 ```bash
 sudo ufw status verbose
@@ -950,7 +974,7 @@ sudo ufw status verbose
 
 - `service --status-all` — no refleja el estado real de UFW: usa ufw status
 
-### 9.25 Abrir un puerto en el firewall
+### 9.27 Abrir un puerto en el firewall
 
 ```bash
 sudo ufw allow puerto
@@ -960,7 +984,7 @@ sudo ufw allow puerto
 - `53 / 67/udp` — DNS / DHCP, según el servicio
 - `OpenSSH` — permitir SSH por nombre de perfil
 
-### 9.26 Activar el firewall sin perder SSH (sin probar)
+### 9.28 Activar el firewall sin perder SSH (sin probar)
 
 ```bash
 sudo ufw allow 22/tcp
@@ -982,13 +1006,54 @@ sudo apt update && sudo apt install -y openssh-server
 - `sudo systemctl enable --now ssh` — arrancarlo y que inicie con el sistema
 - `systemctl status ssh --no-pager` — ver si está activo
 
-### 10.2 Comprobar que SSH escucha en el puerto 22
+### 10.2 Saber si el servicio SSH funciona por socket (Ubuntu reciente)
+
+```bash
+systemctl status ssh.socket
+```
+
+- *activo (listening) en el 22: systemd vigila el puerto y arranca ssh.service al recibir una conexión*
+- *por eso ssh.service puede salir inactive (dead) y SSH funcionar; ss -tlnp muestra systemd (PID 1), no sshd*
+- `sudo systemctl stop ssh.socket ssh` — para cortar SSH de verdad (parar solo ssh.service no basta: el socket lo reactiva)
+- `sudo systemctl start ssh.socket` — volver a dejarlo como estaba
+
+### 10.3 Comprobar si SSH funciona (en este orden)
+
+```bash
+ping IP
+```
+
+- `ip a` — ¿la IP del servidor es la esperada? (en el servidor)
+- `systemctl status ssh` — ¿servicio activo?
+- `ps aux | grep sshd` — ¿existe el proceso?
+- `sudo ss -tlnp` — ¿puerto 22 en LISTEN?
+- `ssh usuario@IP` — ¿usuario y contraseña correctos?
+
+### 10.4 Saber si estoy en una sesión SSH o en la consola local
+
+```bash
+echo $SSH_CONNECTION
+```
+
+- *vacío = consola local; con valor = IP/puerto del cliente y del servidor*
+- `hostname` — el nombre que sale es el del servidor mientras la sesión esté abierta
+
+### 10.5 Cerrar una sesión SSH
+
+```bash
+exit
+```
+
+- `Ctrl+D` — equivalente
+- *el prompt vuelve al de tu equipo cliente*
+
+### 10.6 Comprobar que SSH escucha en el puerto 22
 
 ```bash
 sudo ss -tlnp | grep :22
 ```
 
-### 10.3 Generar un par de claves
+### 10.7 Generar un par de claves
 
 ```bash
 ssh-keygen -t ed25519 -C "comentario"
@@ -999,13 +1064,13 @@ ssh-keygen -t ed25519 -C "comentario"
 - `ssh-keygen -lf nombre.pub` — ver la huella de una pública
 - *sin extensión = privada; .pub = pública*
 
-### 10.4 Copiar la clave pública a un servidor
+### 10.8 Copiar la clave pública a un servidor
 
 ```bash
 ssh-copy-id -i ~/.ssh/id_ed25519.pub usuario@IP
 ```
 
-### 10.5 Conectar por SSH
+### 10.9 Conectar por SSH
 
 ```bash
 ssh usuario@IP
@@ -1015,7 +1080,7 @@ ssh usuario@IP
 - `-J salto` — a través de un servidor intermedio
 - *la primera vez pregunta si confías en la huella (yes)*
 
-### 10.6 Conectar a una MV con red NAT (reenvío de puertos)
+### 10.10 Conectar a una MV con red NAT (reenvío de puertos)
 
 ```bash
 ssh -p PUERTO_ANFITRION usuario@127.0.0.1
@@ -1024,7 +1089,7 @@ ssh -p PUERTO_ANFITRION usuario@127.0.0.1
 - *VirtualBox (MV apagada): Adaptador NAT → Avanzadas → Reenvío de puertos → TCP, IP anfitrión 127.0.0.1, puerto anfitrión → puerto invitado 22*
 - *la IP interna de la NAT (10.0.x.x) no es accesible desde el anfitrión: solo se llega por el reenvío*
 
-### 10.7 Copiar un fichero entre equipos (scp)
+### 10.11 Copiar un fichero entre equipos (scp)
 
 ```bash
 scp -P puerto usuario@IP:ruta_origen destino_local
@@ -1032,7 +1097,7 @@ scp -P puerto usuario@IP:ruta_origen destino_local
 
 - *en scp el puerto es -P mayúscula (en ssh es -p minúscula)*
 
-### 10.8 Ver la huella de las claves del servidor
+### 10.12 Ver la huella de las claves del servidor
 
 ```bash
 ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub
@@ -1041,7 +1106,7 @@ ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub
 - `sudo ls -l /etc/ssh/ssh_host_*` — ver las claves de host (privadas -rw-------)
 - *compárala con la que muestra el cliente en la primera conexión*
 
-### 10.9 Ver las claves guardadas de un servidor (known_hosts)
+### 10.13 Ver las claves guardadas de un servidor (known_hosts)
 
 ```bash
 ssh-keygen -F "[IP]:puerto"
@@ -1050,7 +1115,7 @@ ssh-keygen -F "[IP]:puerto"
 - `-lF` — lo mismo, mostrando huellas
 - *con puerto no estándar, la IP va entre corchetes*
 
-### 10.10 Borrar un servidor de known_hosts (aviso REMOTE HOST IDENTIFICATION HAS CHANGED)
+### 10.14 Borrar un servidor de known_hosts (aviso REMOTE HOST IDENTIFICATION HAS CHANGED)
 
 ```bash
 ssh-keygen -R IP
@@ -1058,7 +1123,7 @@ ssh-keygen -R IP
 
 - *solo toca el cliente; hazlo tras verificar que el servidor es el correcto*
 
-### 10.11 Regenerar las claves SSH del servidor (MV clonada)
+### 10.15 Regenerar las claves SSH del servidor (MV clonada)
 
 ```bash
 sudo rm /etc/ssh/ssh_host_*
@@ -1066,7 +1131,7 @@ sudo rm /etc/ssh/ssh_host_*
 
 - `sudo dpkg-reconfigure openssh-server` — genera claves nuevas
 
-### 10.12 Añadir una clave pública a un servidor sin ssh-copy-id
+### 10.16 Añadir una clave pública a un servidor sin ssh-copy-id
 
 ```bash
 cat clave.pub | ssh usuario@IP "cat >> ~/.ssh/authorized_keys"
@@ -1074,7 +1139,7 @@ cat clave.pub | ssh usuario@IP "cat >> ~/.ssh/authorized_keys"
 
 - `>>` — añade sin borrar las que ya hay
 
-### 10.13 Conectar con una clave concreta
+### 10.17 Conectar con una clave concreta
 
 ```bash
 ssh -i ~/.ssh/nombre usuario@IP
@@ -1082,7 +1147,7 @@ ssh -i ~/.ssh/nombre usuario@IP
 
 - `-o PreferredAuthentications=publickey -o PasswordAuthentication=no -o IdentitiesOnly=yes` — forzar solo clave pública
 
-### 10.14 Autorizar una clave a otro usuario del servidor
+### 10.18 Autorizar una clave a otro usuario del servidor
 
 ```bash
 sudo mkdir -p /home/otro/.ssh
@@ -1094,7 +1159,7 @@ sudo mkdir -p /home/otro/.ssh
 - `sudo ls -ld /home/otro/.ssh` — comprobar
 - *cada cuenta tiene su propio authorized_keys, independiente*
 
-### 10.15 Revocar una clave pública (acceso por clave)
+### 10.19 Revocar una clave pública (acceso por clave)
 
 ```bash
 nano ~/.ssh/authorized_keys
@@ -1105,7 +1170,7 @@ nano ~/.ssh/authorized_keys
 - *el acceso lo controla el servidor: la privada del cliente no hay que borrarla*
 - *conectar con la clave revocada da: Permission denied (publickey)*
 
-### 10.16 Entrar y quedar directamente como root
+### 10.20 Entrar y quedar directamente como root
 
 ```bash
 ssh -tt usuario@IP "sudo -i"
@@ -1113,7 +1178,7 @@ ssh -tt usuario@IP "sudo -i"
 
 - `-tt` — fuerza la asignación de terminal
 
-### 10.17 Pasar a root tras conectar
+### 10.21 Pasar a root tras conectar
 
 ```bash
 sudo -i
@@ -1121,7 +1186,7 @@ sudo -i
 
 - `sudo su -` — equivalente
 
-### 10.18 Configurar un alias de conexión
+### 10.22 Configurar un alias de conexión
 
 ```bash
 ~/.ssh/config
@@ -1130,7 +1195,7 @@ sudo -i
 - `Host / HostName / User / IdentityFile` — campos básicos del alias
 - `RequestTTY force + RemoteCommand sudo -i` — el alias entra ya como root
 
-### 10.19 Depurar una conexión SSH
+### 10.23 Depurar una conexión SSH
 
 ```bash
 ssh -v usuario@IP
@@ -1138,7 +1203,7 @@ ssh -v usuario@IP
 
 - `ssh -G alias` — ver la configuración efectiva de un alias
 
-### 10.20 Permisos que exige SSH para funcionar
+### 10.24 Permisos que exige SSH para funcionar
 
 ```bash
 chmod 700 ~/.ssh
@@ -1146,7 +1211,7 @@ chmod 700 ~/.ssh
 
 - `chmod 600 ~/.ssh/authorized_keys` — también necesario
 
-### 10.21 Ver la configuración efectiva del servidor SSH
+### 10.25 Ver la configuración efectiva del servidor SSH
 
 ```bash
 sudo sshd -T | grep -i passwordauthentication
@@ -1154,7 +1219,7 @@ sudo sshd -T | grep -i passwordauthentication
 
 - `PasswordAuthentication / PermitRootLogin` — se definen en /etc/ssh/sshd_config y sshd_config.d/
 
-### 10.22 Editar sudoers de forma segura
+### 10.26 Editar sudoers de forma segura
 
 ```bash
 sudo visudo
