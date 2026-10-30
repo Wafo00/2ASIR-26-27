@@ -2,6 +2,21 @@
 
 Manuales de las prácticas del módulo. Cada uno lleva un índice al principio para ir directo al apartado que se necesite.
 
+## Máquinas virtuales e IPs
+
+Todas en la red `172.16.6.0/24` (puerta de enlace `172.16.6.1`). Rango asignado: `172.16.6.20` a `172.16.6.29`.
+
+| Máquina | IP | Para qué sirve | Nombres de servicio |
+|---|---|---|---|
+| `server` | `172.16.6.20` | SRI: DNS primario, DHCP primario y web | `dns.`, `dhcp.`, `www.` |
+| `server2` | `172.16.6.21` | SRI: DNS secundario, DHCP secundario y web | `dns2.`, `dhcp2.`, `www2.` |
+| SAD | `172.16.6.22` | Seguridad y Alta Disponibilidad | |
+| ASO | `172.16.6.24` | Administración de Sistemas Operativos | |
+| IAW | `172.16.6.25` | Implantación de aplicaciones web | |
+| `client` | DHCP (pool `.200`-`.250`) o fija `172.16.6.26` | SRI: cliente para probar DHCP y DNS | |
+
+Los nombres de servicio van seguidos de la zona `jordi.asir2.iespoveda.local` (por ejemplo, `www.jordi.asir2.iespoveda.local`). La `.23` y de la `.27` a la `.29` están libres.
+
 ## Manuales
 
 | Manual | Contenido |
@@ -20,8 +35,6 @@ Manuales de las prácticas del módulo. Cada uno lleva un índice al principio p
 |---|---|
 | Red | `172.16.6.0/24` |
 | Puerta de enlace | `172.16.6.1` |
-| Servidor principal (`server`) | `172.16.6.20`: DNS primario, DHCP primario, web (`dns.`, `dhcp.`, `www.`) |
-| Servidor secundario (`server2`) | `172.16.6.21`: DNS secundario, DHCP secundario, web (`dns2.`, `dhcp2.`, `www2.`) |
 | Zona DNS de los servicios | `jordi.asir2.iespoveda.local` |
 | Sistema | Ubuntu Server, en máquinas virtuales de VirtualBox |
 
