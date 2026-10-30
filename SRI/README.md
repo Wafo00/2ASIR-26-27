@@ -12,7 +12,7 @@ Manuales de las prácticas del módulo. Cada uno lleva un índice al principio p
 | [Unit3_dns.md](Unit3_dns.md) | DNS con BIND9: instalación, zonas, reenvío, servidor secundario y transferencia de zonas. Incluye cómo se forman los nombres de dominio |
 | [Unit3_escenario_simulado_dns.md](Unit3_escenario_simulado_dns.md) | DNS con BIND9 en un escenario simulado, con variables, y gestión diaria de dominios (añadir, consultar, cambiar, eliminar) |
 | [Unit4_servidor_web.md](Unit4_servidor_web.md) | Servidor web con Nginx: virtual hosts por puerto y por nombre, firewall, HTTPS con certificado autofirmado y problemas típicos |
-| [Comprobaciones_servicios.md](Comprobaciones_servicios.md) | Comprobación rápida de qué servicios hay, dónde están y si funcionan: script de demostración y comandos sueltos |
+| [Comprobaciones_servicios.md](Comprobaciones_servicios.md) | Comprobación rápida de qué servicios hay, dónde están y si funcionan: tabla de servicios con su dominio (`servicios.sh`), script de demostración y comandos sueltos |
 
 ## Entorno de las prácticas
 
@@ -20,8 +20,8 @@ Manuales de las prácticas del módulo. Cada uno lleva un índice al principio p
 |---|---|
 | Red | `172.16.6.0/24` |
 | Puerta de enlace | `172.16.6.1` |
-| Servidor principal (`server`) | `172.16.6.20`: DNS primario, DHCP primario, web |
-| Servidor secundario (`server2`) | `172.16.6.23`: DNS secundario, DHCP secundario |
+| Servidor principal (`server`) | `172.16.6.20`: DNS primario, DHCP primario, web (`dns.`, `dhcp.`, `www.`) |
+| Servidor secundario (`server2`) | `172.16.6.21`: DNS secundario, DHCP secundario, web (`dns2.`, `dhcp2.`, `www2.`) |
 | Zona DNS de los servicios | `jordi.asir2.iespoveda.local` |
 | Sistema | Ubuntu Server, en máquinas virtuales de VirtualBox |
 
