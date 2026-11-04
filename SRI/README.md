@@ -14,8 +14,9 @@ Todas en la red `172.16.6.0/24` (puerta de enlace `172.16.6.1`). Rango asignado:
 | ASO | `172.16.6.24` | Administración de Sistemas Operativos | |
 | IAW | `172.16.6.25` | Implantación de aplicaciones web | |
 | `client` | DHCP (pool `.200`-`.250`) o fija `172.16.6.26` | SRI: cliente para probar DHCP y DNS | |
+| `docker` | `172.16.6.27` | Docker (clon de ASO, siguiendo el tutorial de clase) | |
 
-Los nombres de servicio van seguidos de la zona `jordi.asir2.iespoveda.local` (por ejemplo, `www.jordi.asir2.iespoveda.local`). La `.23` y de la `.27` a la `.29` están libres.
+Los nombres de servicio van seguidos de la zona `jordi.asir2.iespoveda.local` (por ejemplo, `www.jordi.asir2.iespoveda.local`). La `.23`, la `.28` y la `.29` están libres.
 
 ## Manuales
 
