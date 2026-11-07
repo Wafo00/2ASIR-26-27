@@ -192,7 +192,7 @@ netstat -ano | findstr ":1521 :5500"
 C:\oracle\
 ```
 
-<p align="center"><img src="img/Captura%2004-destino.png" alt="Carpeta de destino"></p>
+<p align="center"><img src="img/Captura_04_ruta_instalacion.png" alt="Carpeta de destino"></p>
 
 ### 4.4. La contraseña de la base de datos
 
@@ -210,7 +210,7 @@ Es la contraseña con la que habrá que **conectarse la primera vez**, así que:
 
 - **Hay que apuntarla en un lugar seguro.** Si se olvida, recuperarla es complicado.
 
-<p align="center"><img src="img/Captura%2004-pass.png" alt="Contraseña de la base de datos"></p>
+<p align="center"><img src="img/Captura_04_contrasena.png" alt="Contraseña de la base de datos"></p>
 
 ### 4.5. Instalación
 
@@ -252,7 +252,7 @@ Oracle funciona como servicios de Windows. Para comprobar que están en marcha:
 
    - `OracleOraDB21Home1TNSListener`: servicio de escucha *(listener)*, que recibe las conexiones.
 
-<p align="center"><img src="img/Captura%2005-servicios.png" alt="Servicios de Oracle"></p>
+<p align="center"><img src="img/Captura_05_servicios.png.png" alt="Servicios de Oracle"></p>
 
 ### 5.2. Servicio de escucha (listener)
 
@@ -270,7 +270,7 @@ En el resultado deben aparecer:
 
 - Los servicios **XE** (el contenedor raíz) y **XEPDB1** (la base de datos de trabajo).
 
-<p align="center"><img src="img/Captura%2005-listener.png" alt="Salida de lsnrctl status"></p>
+<p align="center"><img src="img/Captura_05_listener.png" alt="Salida de lsnrctl status"></p>
 
 Si PowerShell no reconoce la orden, hay que cerrarlo y abrir uno nuevo: el instalador añade las herramientas de Oracle a la configuración del sistema, pero las ventanas ya abiertas no han reconocido el cambio.
 
@@ -312,7 +312,7 @@ Qué hay que comprobar en el resultado:
 
 Las órdenes no distinguen entre mayúsculas y minúsculas, pero las contraseñas y los textos entre comillas sí. Por convención, las palabras clave de SQL se escriben en mayúsculas para facilitar la lectura
 
-<p align="center"><img src="img/Captura%2005-sqlplus.png" alt="Verificación con SQL*Plus"></p>
+<p align="center"><img src="img/Captura_05_sqlplus.png" alt="Verificación con SQL*Plus"></p>
 
 ### 5.4. Consola web EM Express
 
@@ -342,7 +342,7 @@ EM Express (*Enterprise Manager Express*) es una consola de administración que 
 
 Si aparece el panel principal, con el estado de la base de datos y gráficos de actividad, el servidor está funcionando correctamente y la verificación ha terminado.
 
-<p align="center"><img src="img/Captura%2005-web.png" alt="Inicio de sesión en EM Express"></p>
+<p align="center"><img src="img/Captura_05_web.png" alt="Inicio de sesión en EM Express"></p>
 
 ## 6. Configuración posterior: inicio manual de servicios (Solo en equipos personales)
 
@@ -476,7 +476,7 @@ Los scripts necesitan permisos de administrador. Para no tener que pedirlos a ma
 
 A partir de aquí, basta con hacer **doble clic** en el acceso directo y aceptar el aviso de Windows.
 
-<p align="center"><img src="img/Captura%2006-script.png" alt="Ejecución del script de arranque"></p>
+<p align="center"><img src="img/Captura_06_script.png" alt="Ejecución del script de arranque"></p>
 
 **Un único script para arrancar o parar según el estado.**
 
@@ -587,7 +587,7 @@ La dirección tiene tres partes: el equipo (localhost, el propio ordenador), el 
    SHOW CON_NAME
    ```
 
-<p align="center"><img src="img/Captura%2007-XEPDB1.png" alt="Conexión a XEPDB1"></p>
+<p align="center"><img src="img/Captura_07_XEPDB1.png" alt="Conexión a XEPDB1"></p>
 
 El resultado debe ser **XEPDB1**.
 
@@ -628,7 +628,7 @@ La orden `PASSWORD` es propia de SQL\*Plus: pide la contraseña nueva dos veces,
 
 - `DEFAULT TABLESPACE users` indica dónde se guardarán sus tablas. Un *tablespace* es un espacio de almacenamiento dentro de la base de datos, algo así como una carpeta.
 
-<p align="center"><img src="img/Captura%2007-pass.png" alt="Creación del usuario de trabajo"></p>
+<p align="center"><img src="img/Captura_07_pass.png" alt="Creación del usuario de trabajo"></p>
 
 - `QUOTA UNLIMITED ON users` le permite **ocupar espacio** en ese *tablespace*. Sin esta línea, el usuario podría crear tablas, pero fallaría al guardar datos en ellas.
 
@@ -712,11 +712,11 @@ Deben aparecer las dos filas.
    EXIT
    ```
 
-<p align="center"><img src="img/Captura%2007-test1.png" alt="Prueba del usuario (1)"></p>
+<p align="center"><img src="img/Captura_07_test1.png" alt="Prueba del usuario (1)"></p>
 
 Si todos los pasos funcionan, el usuario está correctamente creado, puede conectarse, crear tablas y guardar datos.
 
-<p align="center"><img src="img/Captura%2007-test2.png" alt="Prueba del usuario (2)"></p>
+<p align="center"><img src="img/Captura_07_test2.png" alt="Prueba del usuario (2)"></p>
 
 ### 7.4. Ampliar, quitar o revisar permisos más adelante
 
@@ -834,7 +834,7 @@ Una **conexión** guarda los datos necesarios para entrar en una base de datos c
 
 La conexión aparece en el panel izquierdo. Al desplegarla se ven los objetos de la base de datos: tablas, vistas, otros usuarios…
 
-<p align="center"><img src="img/Captura%2008-nueva.png" alt="Nueva conexión en SQL Developer"></p>
+<p align="center"><img src="img/Captura_08_nueva.png" alt="Nueva conexión en SQL Developer"></p>
 
 > **Nota:** se usa *Nombre del servicio* porque XEPDB1 es una base de datos conectable (PDB) y no tiene SID propio: el listener la ofrece como servicio. Es la base de datos de trabajo que crea el instalador y donde está el usuario de trabajo (sección 7). El SID (XE) solo da acceso al contenedor principal.
 
@@ -864,7 +864,7 @@ Para el trabajo diario se usa el usuario creado en la sección 7, no el administ
 
 4. Pulsar **Ejecutar sentencia** (el triángulo verde) o **Ctrl+Intro**. En **Resultado de la consulta** debe aparecer JORDI y XEPDB1.
 
-<p align="center"><img src="img/Captura%2008-prueba.png" alt="Consulta de prueba en SQL Developer"></p>
+<p align="center"><img src="img/Captura_08_prueba.png" alt="Consulta de prueba en SQL Developer"></p>
 
 Con esto se comprueba que SQL Developer conecta al servidor con el usuario de trabajo y en la BD correcta.
 
